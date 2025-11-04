@@ -1,0 +1,13 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="17.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <CustomBuild Include="D:\zffbs\project\flymfrontend\build\windows\x64\CMakeFiles\5e0f78733e0b94adb8fc635c9c082ec3\INSTALL_force.rule">
+      <Filter>CMake Rules</Filter>
+    </CustomBuild>
+  </ItemGroup>
+  <ItemGroup>
+    <Filter Include="CMake Rules">
+      <UniqueIdentifier>{0DAA313F-14D5-3BA7-B61D-89D49C5F1C28}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+</Project>

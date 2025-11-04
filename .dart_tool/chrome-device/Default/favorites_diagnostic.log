@@ -1,0 +1,84 @@
+2025-11-04 02:39:24.563: [INFO] VisibilityChanged: 0
+2025-11-04 02:39:24.627: [INFO] RecordSyncInitDuration has_sync_been_enabled: 0 state: 0
+2025-11-04 02:39:24.628: [INFO] RecordSyncInitDuration has_sync_been_enabled: 0 state: 0
+2025-11-04 02:39:24.629: [INFO] RecordSyncInitDuration has_sync_been_enabled: 0 state: 0
+2025-11-04 02:39:24.630: [INFO] RecordSyncInitDuration has_sync_been_enabled: 0 state: 0
+2025-11-04 02:39:24.631: [INFO] RecordSyncInitDuration has_sync_been_enabled: 0 state: 0
+2025-11-04 02:39:24.633: [INFO] RecordSyncInitDuration has_sync_been_enabled: 0 state: 0
+2025-11-04 02:39:24.633: [INFO] RecordSyncInitDuration has_sync_been_enabled: 0 state: 0
+2025-11-04 02:39:24.634: [INFO] RecordSyncInitDuration has_sync_been_enabled: 0 state: 0
+2025-11-04 02:39:24.635: [INFO] RecordSyncInitDuration has_sync_been_enabled: 0 state: 0
+2025-11-04 02:39:24.636: [INFO] RecordSyncInitDuration has_sync_been_enabled: 0 state: 0
+2025-11-04 02:39:24.637: [INFO] RecordSyncInitDuration has_sync_been_enabled: 0 state: 0
+2025-11-04 02:39:24.648: [INFO] BookmarkModelLoaded, ids_reassigned: 0
+2025-11-04 02:39:24.648: [INFO] OnDoneLoading sync enabled: 0
+2025-11-04 02:39:24.697: [INFO] RecordSyncInitDuration has_sync_been_enabled: 0 state: 0
+2025-11-04 02:39:28.452: [INFO] BookmarkNodeAdded, ABU: 0
+2025-11-04 02:39:28.452: [INFO] BookmarkNodeAdded, ABU: 0
+2025-11-04 02:39:28.452: [INFO] BookmarkNodeAdded, ABU: 0
+2025-11-04 02:39:28.452: [INFO] BookmarkNodeAdded, ABU: 0
+2025-11-04 02:39:28.452: [INFO] BookmarkNodeAdded, ABU: 0
+2025-11-04 02:39:28.453: [INFO] BookmarkNodeAdded, ABU: 0
+2025-11-04 02:39:28.453: [INFO] BookmarkNodeAdded, ABU: 0
+2025-11-04 02:39:28.453: [INFO] BookmarkNodeAdded, ABU: 0
+2025-11-04 02:39:28.453: [INFO] BookmarkNodeAdded, ABU: 0
+2025-11-04 02:40:16.443: [INFO] RecordSyncInitDuration has_sync_been_enabled: 0 state: 3
+2025-11-04 02:40:16.453: [INFO] Primary account changed.
+2025-11-04 02:40:16.453: [INFO] OnPrimaryAccountChanged PrimaryAccountChangeEvent::Type::kSet
+2025-11-04 02:40:16.459: [INFO] RecordSyncInitDuration has_sync_been_enabled: 0 state: 3
+2025-11-04 02:40:16.530: [INFO] RecordSyncInitDuration has_sync_been_enabled: 0 state: 3
+2025-11-04 02:50:25.525: [INFO] VisibilityChanged: 0
+2025-11-04 02:50:25.585: [INFO] BookmarkModelLoaded, ids_reassigned: 0
+2025-11-04 02:50:25.585: [INFO] OnDoneLoading sync enabled: 1
+2025-11-04 02:51:24.040: [INFO] BookmarkNodeAdded, ABU: 0
+2025-11-04 02:51:24.040: [INFO] BookmarkNodeMoved
+2025-11-04 02:51:24.040: [INFO] BookmarkNodeAdded, ABU: 0
+2025-11-04 02:51:24.040: [INFO] Remove, DeletionOrigin: 19
+2025-11-04 02:51:24.041: [INFO] BookmarkNodeRemoved, Url: 1, IsFolder: 0, IsWorkspace: 0
+2025-11-04 02:51:24.041: [INFO] BookmarkNodeMoved
+2025-11-04 02:51:24.041: [INFO] BookmarkNodeAdded, ABU: 0
+2025-11-04 02:51:24.041: [INFO] Remove, DeletionOrigin: 19
+2025-11-04 02:51:24.041: [INFO] BookmarkNodeRemoved, Url: 1, IsFolder: 0, IsWorkspace: 0
+2025-11-04 02:51:24.042: [INFO] BookmarkNodeAdded, ABU: 0
+2025-11-04 02:51:24.042: [INFO] BookmarkNodeAdded, ABU: 0
+2025-11-04 02:51:24.042: [INFO] BookmarkNodeAdded, ABU: 0
+2025-11-04 02:51:24.042: [INFO] BookmarkNodeMoved
+2025-11-04 02:51:24.042: [INFO] BookmarkNodeAdded, ABU: 0
+2025-11-04 02:51:24.042: [INFO] Remove, DeletionOrigin: 19
+2025-11-04 02:51:24.043: [INFO] BookmarkNodeRemoved, Url: 1, IsFolder: 0, IsWorkspace: 0
+2025-11-04 02:51:24.043: [INFO] BookmarkNodeAdded, ABU: 0
+2025-11-04 02:51:24.043: [INFO] BookmarkNodeAdded, ABU: 0
+2025-11-04 02:51:24.043: [INFO] BookmarkNodeAdded, ABU: 0
+2025-11-04 02:51:24.043: [INFO] BookmarkNodeAdded, ABU: 0
+2025-11-04 02:51:24.043: [INFO] BookmarkNodeAdded, ABU: 0
+2025-11-04 02:51:24.044: [INFO] BookmarkNodeAdded, ABU: 0
+2025-11-04 02:51:24.044: [INFO] BookmarkNodeAdded, ABU: 0
+2025-11-04 02:51:24.044: [INFO] BookmarkNodeAdded, ABU: 0
+2025-11-04 02:51:24.044: [INFO] BookmarkNodeAdded, ABU: 0
+2025-11-04 02:51:24.044: [INFO] BookmarkNodeAdded, ABU: 0
+2025-11-04 02:51:24.044: [INFO] Remove, DeletionOrigin: 19
+2025-11-04 02:51:24.044: [INFO] BookmarkNodeRemoved, Url: 1, IsFolder: 0, IsWorkspace: 0
+2025-11-04 02:51:24.045: [INFO] BookmarkNodeAdded, ABU: 0
+2025-11-04 02:51:24.045: [INFO] Remove, DeletionOrigin: 19
+2025-11-04 02:51:24.045: [INFO] BookmarkNodeRemoved, Url: 1, IsFolder: 0, IsWorkspace: 0
+2025-11-04 02:51:24.045: [INFO] BookmarkNodeAdded, ABU: 0
+2025-11-04 02:51:24.045: [INFO] Remove, DeletionOrigin: 19
+2025-11-04 02:51:24.046: [INFO] BookmarkNodeRemoved, Url: 1, IsFolder: 0, IsWorkspace: 0
+2025-11-04 02:51:24.046: [INFO] BookmarkNodeAdded, ABU: 0
+2025-11-04 02:51:24.046: [INFO] Remove, DeletionOrigin: 19
+2025-11-04 02:51:24.046: [INFO] BookmarkNodeRemoved, Url: 1, IsFolder: 0, IsWorkspace: 0
+2025-11-04 02:51:24.046: [INFO] BookmarkNodeAdded, ABU: 0
+2025-11-04 02:51:24.046: [INFO] Remove, DeletionOrigin: 19
+2025-11-04 02:51:24.046: [INFO] BookmarkNodeRemoved, Url: 1, IsFolder: 0, IsWorkspace: 0
+2025-11-04 02:51:24.047: [INFO] BookmarkNodeAdded, ABU: 0
+2025-11-04 02:51:46.086: [INFO] Sync initialization duration: 80357ms
+2025-11-04 02:53:12.454: [INFO] VisibilityChanged: 0
+2025-11-04 02:53:12.531: [INFO] BookmarkModelLoaded, ids_reassigned: 0
+2025-11-04 02:53:12.531: [INFO] OnDoneLoading sync enabled: 1
+2025-11-04 02:56:25.756: [INFO] VisibilityChanged: 0
+2025-11-04 02:56:25.838: [INFO] BookmarkModelLoaded, ids_reassigned: 0
+2025-11-04 02:56:25.838: [INFO] OnDoneLoading sync enabled: 1
+2025-11-04 03:30:20.540: [INFO] VisibilityChanged: 0
+2025-11-04 03:30:20.621: [INFO] BookmarkModelLoaded, ids_reassigned: 0
+2025-11-04 03:30:20.621: [INFO] OnDoneLoading sync enabled: 1
+2025-11-04 03:30:33.294: [INFO] Sync initialization duration: 12502ms

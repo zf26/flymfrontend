@@ -1,0 +1,13 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="17.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <CustomBuild Include="D:\zffbs\project\flymfrontend\build\windows\x64\_deps\nuget-subbuild\CMakeFiles\7f61b07b5a3f228d6fef8b9b68abcc6f\generate.stamp.rule">
+      <Filter>CMake Rules</Filter>
+    </CustomBuild>
+  </ItemGroup>
+  <ItemGroup>
+    <Filter Include="CMake Rules">
+      <UniqueIdentifier>{040F7ABB-AEB6-3EC5-81F2-1921B9D45ACD}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+</Project>
