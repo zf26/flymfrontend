@@ -1,6 +1,8 @@
 import 'package:flymfrontend/services/api/api_service.dart';
 import 'package:flymfrontend/services/api/auth_service.dart';
 import 'package:flymfrontend/services/api/consultation_service.dart';
+import 'package:flymfrontend/services/api/doctor_service.dart';
+import 'package:flymfrontend/services/api/upload_service.dart';
 
 /// 服务定位器（简单的依赖注入容器）
 class ServiceLocator {
@@ -46,11 +48,29 @@ class ServiceLocator {
     return _services[ConsultationService] as ConsultationService;
   }
 
+  /// 获取医生服务
+  DoctorService getDoctorService() {
+    if (!_services.containsKey(DoctorService)) {
+      throw Exception('DoctorService not registered');
+    }
+    return _services[DoctorService] as DoctorService;
+  }
+
+  /// 获取上传服务
+  UploadService getUploadService() {
+    if (!_services.containsKey(UploadService)) {
+      throw Exception('UploadService not registered');
+    }
+    return _services[UploadService] as UploadService;
+  }
+
   /// 初始化所有服务
   void initialize() {
     // 注册API服务
     registerSingleton<ApiService>(() => ApiService());
     register<AuthService>(AuthService(getApiService()));
     register<ConsultationService>(ConsultationService(getApiService()));
+    register<DoctorService>(DoctorService(getApiService()));
+    register<UploadService>(UploadService(getApiService()));
   }
 }

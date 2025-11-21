@@ -1,4 +1,5 @@
 import 'package:dio/dio.dart';
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flymfrontend/config/app_config.dart';
 import 'package:flymfrontend/config/app_environment.dart';
 import 'package:flymfrontend/core/interceptors/auth_interceptor.dart';
@@ -9,14 +10,35 @@ class ApiService {
   late Dio _dio;
 
   ApiService() {
+    // 构建基础请求头
+    final Map<String, dynamic> headers = {
+      'Content-Type': 'application/json',
+      'Accept': 'application/json',
+    };
+
+    // Web环境下添加额外请求头
+    // 注意：不要手动添加 Origin 和 Referer，浏览器会自动添加
+    if (kIsWeb) {
+      headers['X-Requested-With'] = 'XMLHttpRequest';
+    }
+
     _dio = Dio(
       BaseOptions(
         baseUrl: AppEnvironmentConfig.getApiBaseUrl(),
         connectTimeout: Duration(milliseconds: AppConfig.connectTimeout),
         receiveTimeout: Duration(milliseconds: AppConfig.receiveTimeout),
-        headers: {
-          'Content-Type': 'application/json',
-          'Accept': 'application/json',
+        headers: headers,
+        // 设置响应类型
+        responseType: ResponseType.json,
+        // 允许跟随重定向
+        followRedirects: true,
+        // 最大重定向次数
+        maxRedirects: 5,
+        // 验证状态码
+        validateStatus: (status) {
+          // 允许所有状态码，不抛出异常，由业务层处理
+          // 这样即使403也能获取到响应数据
+          return status != null && status < 600;
         },
       ),
     );

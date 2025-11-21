@@ -1,0 +1,31 @@
+// **************************************************************************
+// JsonSerializableGenerator
+// **************************************************************************
+
+DoctorModel _$DoctorModelFromJson(Map<String, dynamic> json) => DoctorModel(
+  id: json['id'] as String,
+  name: json['name'] as String,
+  avatar: json['avatar'] as String?,
+  title: json['title'] as String?,
+  department: json['department'] as String?,
+  hospital: json['hospital'] as String?,
+  introduction: json['introduction'] as String?,
+  rating: (json['rating'] as num?)?.toDouble(),
+  consultationCount: (json['consultationCount'] as num?)?.toInt(),
+  specialties:
+      (json['specialties'] as List<dynamic>?)?.map((e) => e as String).toList(),
+);
+
+Map<String, dynamic> _$DoctorModelToJson(DoctorModel instance) =>
+    <String, dynamic>{
+      'id': instance.id,
+      'name': instance.name,
+      'avatar': instance.avatar,
+      'title': instance.title,
+      'department': instance.department,
+      'hospital': instance.hospital,
+      'introduction': instance.introduction,
+      'rating': instance.rating,
+      'consultationCount': instance.consultationCount,
+      'specialties': instance.specialties,
+    };

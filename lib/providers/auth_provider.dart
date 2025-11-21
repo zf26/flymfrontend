@@ -94,9 +94,117 @@ class AuthProvider with ChangeNotifier {
     }
   }
 
+  /// 微信登录
+  Future<bool> loginWithWeChat() async {
+    _isLoading = true;
+    _errorMessage = null;
+    notifyListeners();
+
+    try {
+      // TODO: 实现微信登录逻辑
+      await Future.delayed(const Duration(seconds: 1)); // 模拟请求
+      _isLoading = false;
+      notifyListeners();
+      // 临时返回false，实际应该调用微信登录API
+      _errorMessage = '微信登录功能开发中';
+      return false;
+    } catch (e) {
+      LoggerUtil.e('微信登录失败', e);
+      _errorMessage = ExceptionHandler.getErrorMessage(e);
+      _isLoading = false;
+      notifyListeners();
+      return false;
+    }
+  }
+
+  /// 支付宝登录
+  Future<bool> loginWithAlipay() async {
+    _isLoading = true;
+    _errorMessage = null;
+    notifyListeners();
+
+    try {
+      // TODO: 实现支付宝登录逻辑
+      await Future.delayed(const Duration(seconds: 1)); // 模拟请求
+      _isLoading = false;
+      notifyListeners();
+      // 临时返回false，实际应该调用支付宝登录API
+      _errorMessage = '支付宝登录功能开发中';
+      return false;
+    } catch (e) {
+      LoggerUtil.e('支付宝登录失败', e);
+      _errorMessage = ExceptionHandler.getErrorMessage(e);
+      _isLoading = false;
+      notifyListeners();
+      return false;
+    }
+  }
+
   /// 清除错误信息
   void clearError() {
     _errorMessage = null;
     notifyListeners();
+  }
+
+  /// 获取短信验证码
+  Future<bool> sendSmsCode(String phone) async {
+    _isLoading = true;
+    _errorMessage = null;
+    notifyListeners();
+
+    try {
+      final result = await _authService.sendSmsCode(phone);
+      _isLoading = false;
+      notifyListeners();
+      if (result.success) {
+        return true;
+      } else {
+        _errorMessage = result.message;
+        notifyListeners();
+        return false;
+      }
+    } catch (e) {
+      LoggerUtil.e('获取验证码失败', e);
+      _errorMessage = ExceptionHandler.getErrorMessage(e);
+      _isLoading = false;
+      notifyListeners();
+      return false;
+    }
+  }
+
+  /// 注册
+  Future<bool> register(String phone, String password, String smsCode) async {
+    _isLoading = true;
+    _errorMessage = null;
+    notifyListeners();
+
+    try {
+      final result = await _authService.register(phone, password, smsCode);
+      if (result.success && result.data != null) {
+        // 保存用户信息
+        final userData = result.data!['user'];
+        if (userData != null) {
+          _user = UserModel.fromJson(userData as Map<String, dynamic>);
+          await StorageUtil.setString(
+            AppConfig.keyUserInfo,
+            jsonEncode(_user!.toJson()),
+          );
+        }
+        _isLoading = false;
+        notifyListeners();
+        return true;
+      } else {
+        _errorMessage = result.message;
+        _isLoading = false;
+        notifyListeners();
+        return false;
+      }
+    } catch (e) {
+      LoggerUtil.e('注册失败', e);
+      _errorMessage = ExceptionHandler.getErrorMessage(e);
+      _isLoading = false;
+      notifyListeners();
+      return false;
+    }
   }
 }

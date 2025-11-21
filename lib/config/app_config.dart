@@ -14,7 +14,13 @@ class AppConfig {
   static const String keyToken = 'token';
   static const String keyUserInfo = 'user_info';
   static const String keyIsFirstLaunch = 'is_first_launch';
+  static const String keyCacheEnabled = 'cache_enabled';
+  static const String keyAutoCleanCache = 'auto_clean_cache';
 
   // 分页配置
   static const int pageSize = 20;
+
+  // 缓存配置
+  static const String cacheKeyConsultations = 'consultations';
+  static const String cacheKeyDoctors = 'doctors';
 }

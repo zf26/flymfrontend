@@ -37,8 +37,14 @@ dependencies:
   # 图片加载
   cached_network_image: ^3.4.1
 
+  # SVG图标
+  flutter_svg: ^2.0.10+1
+
   # 权限管理
   permission_handler: ^11.3.1
+
+  # 图片选择器
+  image_picker: ^1.1.2
 
 dev_dependencies:
   flutter_test:

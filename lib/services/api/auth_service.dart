@@ -18,9 +18,39 @@ class AuthService {
   ) async {
     try {
       final response = await _apiService.post(
-        '/app/pda/loginCheck',
+        '/auth/login',
         data: {'username': phone, 'password': password},
       );
+
+      // 检查HTTP状态码，如果是403等错误状态码，需要特殊处理
+      if (response.statusCode != null && response.statusCode! >= 400) {
+        // 如果响应有数据，尝试解析
+        if (response.data != null) {
+          try {
+            final result = ApiResult<Map<String, dynamic>>.fromJson(
+              response.data as Map<String, dynamic>,
+              (json) => json as Map<String, dynamic>,
+            );
+            return result;
+          } catch (e) {
+            // 如果解析失败，抛出异常
+            throw DioException(
+              requestOptions: response.requestOptions,
+              response: response,
+              type: DioExceptionType.badResponse,
+              message: '服务器返回错误状态码: ${response.statusCode}',
+            );
+          }
+        } else {
+          // 如果没有响应数据，直接抛出异常
+          throw DioException(
+            requestOptions: response.requestOptions,
+            response: response,
+            type: DioExceptionType.badResponse,
+            message: '服务器返回错误状态码: ${response.statusCode}',
+          );
+        }
+      }
 
       final result = ApiResult<Map<String, dynamic>>.fromJson(
         response.data as Map<String, dynamic>,
@@ -63,5 +93,110 @@ class AuthService {
   Future<bool> checkLoggedIn() async {
     final token = await getToken();
     return token != null && token.isNotEmpty;
+  }
+
+  /// 获取短信验证码
+  Future<ApiResult<void>> sendSmsCode(String phone) async {
+    try {
+      final response = await _apiService.post(
+        '/auth/sendSmsVerifyCode',
+        data: {'phone': phone},
+      );
+
+      // 检查HTTP状态码
+      if (response.statusCode != null && response.statusCode! >= 400) {
+        if (response.data != null) {
+          try {
+            final result = ApiResult<void>.fromJson(
+              response.data as Map<String, dynamic>,
+              (_) {},
+            );
+            return result;
+          } catch (e) {
+            throw DioException(
+              requestOptions: response.requestOptions,
+              response: response,
+              type: DioExceptionType.badResponse,
+              message: '服务器返回错误状态码: ${response.statusCode}',
+            );
+          }
+        } else {
+          throw DioException(
+            requestOptions: response.requestOptions,
+            response: response,
+            type: DioExceptionType.badResponse,
+            message: '服务器返回错误状态码: ${response.statusCode}',
+          );
+        }
+      }
+
+      return ApiResult<void>.fromJson(
+        response.data as Map<String, dynamic>,
+        (_) {},
+      );
+    } on DioException catch (e) {
+      throw ExceptionHandler.handleDioException(e);
+    } catch (e) {
+      throw ExceptionHandler.handleException(e);
+    }
+  }
+
+  /// 注册
+  Future<ApiResult<Map<String, dynamic>>> register(
+    String phone,
+    String password,
+    String smsCode,
+  ) async {
+    try {
+      final response = await _apiService.post(
+        '/auth/register',
+        data: {'username': phone, 'password': password, 'smsCode': smsCode},
+      );
+
+      // 检查HTTP状态码
+      if (response.statusCode != null && response.statusCode! >= 400) {
+        if (response.data != null) {
+          try {
+            final result = ApiResult<Map<String, dynamic>>.fromJson(
+              response.data as Map<String, dynamic>,
+              (json) => json as Map<String, dynamic>,
+            );
+            return result;
+          } catch (e) {
+            throw DioException(
+              requestOptions: response.requestOptions,
+              response: response,
+              type: DioExceptionType.badResponse,
+              message: '服务器返回错误状态码: ${response.statusCode}',
+            );
+          }
+        } else {
+          throw DioException(
+            requestOptions: response.requestOptions,
+            response: response,
+            type: DioExceptionType.badResponse,
+            message: '服务器返回错误状态码: ${response.statusCode}',
+          );
+        }
+      }
+
+      final result = ApiResult<Map<String, dynamic>>.fromJson(
+        response.data as Map<String, dynamic>,
+        (json) => json as Map<String, dynamic>,
+      );
+
+      if (result.success && result.data != null) {
+        final token = result.data!['access_token'] as String?;
+        if (token != null) {
+          await StorageUtil.setString(AppConfig.keyToken, token);
+        }
+      }
+
+      return result;
+    } on DioException catch (e) {
+      throw ExceptionHandler.handleDioException(e);
+    } catch (e) {
+      throw ExceptionHandler.handleException(e);
+    }
   }
 }

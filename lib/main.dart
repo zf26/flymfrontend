@@ -8,6 +8,10 @@ import 'package:flymfrontend/core/router/app_router.dart';
 import 'package:flymfrontend/core/theme/app_theme.dart';
 import 'package:flymfrontend/providers/auth_provider.dart';
 import 'package:flymfrontend/providers/consultation_provider.dart';
+import 'package:flymfrontend/providers/doctor_provider.dart';
+import 'package:flymfrontend/providers/settings_provider.dart';
+import 'package:flymfrontend/core/cache/cache_manager.dart';
+import 'package:flymfrontend/config/app_config.dart';
 import 'package:flymfrontend/utils/storage_util.dart';
 import 'package:flymfrontend/utils/logger_util.dart';
 
@@ -24,6 +28,14 @@ void main() async {
 
   // 初始化依赖注入容器
   ServiceLocator().initialize();
+
+  // 清理过期缓存
+  final cacheManager = CacheManager();
+  final autoCleanCache =
+      StorageUtil.getBool(AppConfig.keyAutoCleanCache) ?? true;
+  if (autoCleanCache) {
+    await cacheManager.cleanExpiredCache();
+  }
 
   // 全局异常捕获
   FlutterError.onError = (FlutterErrorDetails details) {
@@ -59,6 +71,10 @@ class MyApp extends StatelessWidget {
               (_) =>
                   ConsultationProvider(serviceLocator.getConsultationService()),
         ),
+        ChangeNotifierProvider(
+          create: (_) => DoctorProvider(serviceLocator.getDoctorService()),
+        ),
+        ChangeNotifierProvider(create: (_) => SettingsProvider()),
       ],
       child: ScreenUtilInit(
         designSize: const Size(375, 812), // 设计稿尺寸

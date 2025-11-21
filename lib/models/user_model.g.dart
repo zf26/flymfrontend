@@ -12,7 +12,7 @@ UserModel _$UserModelFromJson(Map<String, dynamic> json) => UserModel(
   name: json['name'] as String?,
   avatar: json['avatar'] as String?,
   gender: json['gender'] as String?,
-  age: json['age'] as int?,
+  age: (json['age'] as num?)?.toInt(),
 );
 
 Map<String, dynamic> _$UserModelToJson(UserModel instance) => <String, dynamic>{

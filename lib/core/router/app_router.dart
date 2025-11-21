@@ -7,7 +7,10 @@ import 'package:flymfrontend/screens/login/login_screen.dart';
 import 'package:flymfrontend/screens/home/home_screen.dart';
 import 'package:flymfrontend/screens/consultation/consultation_list_screen.dart';
 import 'package:flymfrontend/screens/consultation/consultation_detail_screen.dart';
+import 'package:flymfrontend/screens/consultation/create_consultation_screen.dart';
+import 'package:flymfrontend/screens/doctor/doctor_list_screen.dart';
 import 'package:flymfrontend/screens/profile/profile_screen.dart';
+import 'package:flymfrontend/screens/settings/settings_screen.dart';
 
 /// 路由配置
 class AppRouter {
@@ -47,9 +50,27 @@ class AppRouter {
           },
         ),
         GoRoute(
+          path: AppConstants.routeCreateConsultation,
+          name: 'create_consultation',
+          builder: (context, state) {
+            final doctorId = state.uri.queryParameters['doctorId'];
+            return CreateConsultationScreen(doctorId: doctorId);
+          },
+        ),
+        GoRoute(
+          path: AppConstants.routeDoctorList,
+          name: 'doctor_list',
+          builder: (context, state) => const DoctorListScreen(),
+        ),
+        GoRoute(
           path: AppConstants.routeProfile,
           name: 'profile',
           builder: (context, state) => const ProfileScreen(),
+        ),
+        GoRoute(
+          path: AppConstants.routeSettings,
+          name: 'settings',
+          builder: (context, state) => const SettingsScreen(),
         ),
       ],
       errorBuilder:

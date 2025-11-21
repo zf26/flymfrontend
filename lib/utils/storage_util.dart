@@ -63,4 +63,12 @@ class StorageUtil {
   static bool containsKey(String key) {
     return _prefs.containsKey(key);
   }
+
+  /// 获取所有keys
+  static Set<String> getKeys() {
+    return _prefs.getKeys();
+  }
+
+  /// 获取SharedPreferences实例（用于高级操作）
+  static SharedPreferences get instance => _prefs;
 }

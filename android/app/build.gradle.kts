@@ -1,3 +1,5 @@
+
+
 plugins {
     id("com.android.application")
     id("kotlin-android")
@@ -7,8 +9,8 @@ plugins {
 
 android {
     namespace = "com.example.flymfrontend"
-    compileSdk = flutter.compileSdkVersion
-    ndkVersion = flutter.ndkVersion
+    compileSdk = 35
+    ndkVersion = "28.0.12433566 rc1"
 
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_11
@@ -37,6 +39,7 @@ android {
             signingConfig = signingConfigs.getByName("debug")
         }
     }
+    buildToolsVersion = "35.0.0"
 }
 
 flutter {

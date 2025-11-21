@@ -6,6 +6,7 @@ class AppConstants {
   static const String routeHome = '/home';
   static const String routeConsultation = '/consultation';
   static const String routeConsultationDetail = '/consultation/detail';
+  static const String routeCreateConsultation = '/consultation/create';
   static const String routeDoctorList = '/doctor/list';
   static const String routeDoctorDetail = '/doctor/detail';
   static const String routeProfile = '/profile';

@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 import 'package:go_router/go_router.dart';
 import 'package:flymfrontend/config/app_constants.dart';
 import 'package:flymfrontend/providers/consultation_provider.dart';
+import 'package:flymfrontend/models/consultation_model.dart';
 
 /// 问诊列表页
 class ConsultationListScreen extends StatefulWidget {
@@ -24,7 +25,6 @@ class _ConsultationListScreenState extends State<ConsultationListScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('我的问诊')),
       body: Consumer<ConsultationProvider>(
         builder: (context, provider, child) {
           if (provider.isLoading && provider.consultations.isEmpty) {
@@ -69,7 +69,7 @@ class _ConsultationListScreenState extends State<ConsultationListScreen> {
                   const SizedBox(height: 24),
                   ElevatedButton(
                     onPressed: () {
-                      // TODO: 跳转到创建问诊页面
+                      context.push(AppConstants.routeCreateConsultation);
                     },
                     child: const Text('开始问诊'),
                   ),
@@ -106,7 +106,7 @@ class _ConsultationListScreenState extends State<ConsultationListScreen> {
       ),
       floatingActionButton: FloatingActionButton(
         onPressed: () {
-          // TODO: 跳转到创建问诊页面
+          context.push(AppConstants.routeCreateConsultation);
         },
         child: const Icon(Icons.add),
       ),
@@ -116,7 +116,7 @@ class _ConsultationListScreenState extends State<ConsultationListScreen> {
 
 /// 问诊列表项
 class _ConsultationItem extends StatelessWidget {
-  final dynamic consultation; // TODO: 使用ConsultationModel
+  final ConsultationModel consultation;
 
   const _ConsultationItem({required this.consultation});
 
@@ -156,24 +156,23 @@ class _ConsultationItem extends StatelessWidget {
       margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
       child: ListTile(
         leading: const CircleAvatar(child: Icon(Icons.medical_services)),
-        title: Text(consultation['doctorName'] ?? '医生'),
+        title: Text(consultation.doctorName ?? '医生'),
         subtitle: Text(
-          consultation['description'] ?? '问诊描述',
+          consultation.description ?? '问诊描述',
           maxLines: 2,
           overflow: TextOverflow.ellipsis,
         ),
         trailing: Chip(
           label: Text(
-            _getStatusText(consultation['status'] ?? ''),
+            _getStatusText(consultation.status),
             style: const TextStyle(color: Colors.white, fontSize: 12),
           ),
-          backgroundColor: _getStatusColor(consultation['status'] ?? ''),
+          backgroundColor: _getStatusColor(consultation.status),
         ),
         onTap: () {
-          // TODO: 跳转到问诊详情
-          // context.push(
-          //   '${AppConstants.routeConsultationDetail}/${consultation.id}',
-          // );
+          context.push(
+            '${AppConstants.routeConsultationDetail}/${consultation.id}',
+          );
         },
       ),
     );

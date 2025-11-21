@@ -15,7 +15,6 @@ class _ConsultationDetailScreenState extends State<ConsultationDetailScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('问诊详情')),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(16),
         child: Column(
