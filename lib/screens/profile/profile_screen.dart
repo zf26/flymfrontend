@@ -58,159 +58,144 @@ class ProfileScreen extends StatelessWidget {
     final colorScheme = theme.colorScheme;
 
     return Scaffold(
-      body: Consumer<AuthProvider>(
-        builder: (context, authProvider, child) {
-          final user = authProvider.user;
-          final phone = _formatPhone(user?.phone);
-          final displayName = user?.name ?? '用户';
+      body: SafeArea(
+        child: Consumer<AuthProvider>(
+          builder: (context, authProvider, child) {
+            final user = authProvider.user;
+            final phone = _formatPhone(user?.phone);
+            final displayName = user?.name ?? '用户';
 
-          return ListView(
-            padding: const EdgeInsets.all(16),
-            children: [
-              // 用户信息卡片
-              Card(
-                child: ListTile(
-                  contentPadding: const EdgeInsets.all(16),
-                  leading: CircleAvatar(
-                    radius: 30,
-                    backgroundColor: colorScheme.primary.withOpacity(0.1),
-                    child: Icon(
-                      Icons.person,
-                      size: 30,
-                      color: colorScheme.primary,
-                    ),
-                  ),
-                  title: Text(
-                    displayName,
-                    style: const TextStyle(
-                      fontSize: 18,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                  subtitle: Padding(
-                    padding: const EdgeInsets.only(top: 4),
-                    child: Text('手机号：$phone'),
-                  ),
-                ),
-              ),
-              const SizedBox(height: 16),
-
-              // 功能菜单卡片
-              Card(
-                child: Column(
-                  children: [
-                    ListTile(
-                      leading: Icon(
-                        Icons.person_outline,
+            return ListView(
+              padding: const EdgeInsets.fromLTRB(16, 16, 16, 32),
+              children: [
+                // 用户信息卡片
+                Card(
+                  child: ListTile(
+                    contentPadding: const EdgeInsets.all(16),
+                    leading: CircleAvatar(
+                      radius: 30,
+                      backgroundColor: colorScheme.primary.withOpacity(0.1),
+                      child: Icon(
+                        Icons.person,
+                        size: 30,
                         color: colorScheme.primary,
                       ),
-                      title: const Text('个人信息'),
-                      trailing: const Icon(Icons.chevron_right),
-                      onTap: () {
-                        // TODO: 跳转到个人信息页面
-                      },
                     ),
-                    const Divider(height: 1),
-                    ListTile(
-                      leading: Icon(
-                        Icons.medical_services_outlined,
-                        color: colorScheme.primary,
-                      ),
-                      title: const Text('我的问诊'),
-                      trailing: const Icon(Icons.chevron_right),
-                      onTap: () {
-                        context.go(AppConstants.routeConsultation);
-                      },
-                    ),
-                    const Divider(height: 1),
-                    ListTile(
-                      leading: Icon(
-                        Icons.health_and_safety_outlined,
-                        color: colorScheme.primary,
-                      ),
-                      title: const Text('健康档案'),
-                      trailing: const Icon(Icons.chevron_right),
-                      onTap: () {
-                        // TODO: 跳转到健康档案页面
-                      },
-                    ),
-                  ],
-                ),
-              ),
-              const SizedBox(height: 16),
-
-              // 设置菜单卡片
-              Card(
-                child: Column(
-                  children: [
-                    ListTile(
-                      leading: Icon(
-                        Icons.settings_outlined,
-                        color: colorScheme.primary,
-                      ),
-                      title: const Text('设置'),
-                      trailing: const Icon(Icons.chevron_right),
-                      onTap: () {
-                        context.push(AppConstants.routeSettings);
-                      },
-                    ),
-                    const Divider(height: 1),
-                    ListTile(
-                      leading: Icon(
-                        Icons.help_outline,
-                        color: colorScheme.primary,
-                      ),
-                      title: const Text('帮助中心'),
-                      trailing: const Icon(Icons.chevron_right),
-                      onTap: () {
-                        // TODO: 跳转到帮助中心
-                      },
-                    ),
-                    const Divider(height: 1),
-                    ListTile(
-                      leading: Icon(
-                        Icons.info_outline,
-                        color: colorScheme.primary,
-                      ),
-                      title: const Text('关于我们'),
-                      trailing: const Icon(Icons.chevron_right),
-                      onTap: () {
-                        // TODO: 跳转到关于我们页面
-                      },
-                    ),
-                  ],
-                ),
-              ),
-              const SizedBox(height: 16),
-
-              // 退出登录按钮
-              Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 16),
-                child: SizedBox(
-                  height: 50,
-                  child: OutlinedButton(
-                    onPressed: () => _handleLogout(context),
-                    style: OutlinedButton.styleFrom(
-                      foregroundColor: Colors.red,
-                      side: const BorderSide(color: Colors.red),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(12),
+                    title: Text(
+                      displayName,
+                      style: const TextStyle(
+                        fontSize: 18,
+                        fontWeight: FontWeight.bold,
                       ),
                     ),
-                    child: const Text(
-                      '退出登录',
-                      style: TextStyle(
-                        fontSize: 16,
-                        fontWeight: FontWeight.w500,
-                      ),
+                    subtitle: Padding(
+                      padding: const EdgeInsets.only(top: 4),
+                      child: Text('手机号：$phone'),
                     ),
                   ),
                 ),
-              ),
-              const SizedBox(height: 16),
-            ],
-          );
-        },
+                const SizedBox(height: 16),
+
+                // 功能菜单卡片
+                Card(
+                  child: Column(
+                    children: [
+                      ListTile(
+                        leading: Icon(
+                          Icons.person_outline,
+                          color: colorScheme.primary,
+                        ),
+                        title: const Text('个人信息'),
+                        trailing: const Icon(Icons.chevron_right),
+                        onTap: () {
+                          // TODO: 跳转到个人信息页面
+                        },
+                      ),
+                      const Divider(height: 1),
+                      ListTile(
+                        leading: Icon(
+                          Icons.medical_services_outlined,
+                          color: colorScheme.primary,
+                        ),
+                        title: const Text('我的问诊'),
+                        trailing: const Icon(Icons.chevron_right),
+                        onTap: () {
+                          context.go(AppConstants.routeConsultation);
+                        },
+                      ),
+                      const Divider(height: 1),
+                      ListTile(
+                        leading: Icon(
+                          Icons.health_and_safety_outlined,
+                          color: colorScheme.primary,
+                        ),
+                        title: const Text('健康档案'),
+                        trailing: const Icon(Icons.chevron_right),
+                        onTap: () {
+                          // TODO: 跳转到健康档案页面
+                        },
+                      ),
+                    ],
+                  ),
+                ),
+                const SizedBox(height: 16),
+
+                // 设置菜单卡片
+                Card(
+                  child: Column(
+                    children: [
+                      ListTile(
+                        leading: Icon(
+                          Icons.settings_outlined,
+                          color: colorScheme.primary,
+                        ),
+                        title: const Text('设置'),
+                        trailing: const Icon(Icons.chevron_right),
+                        onTap: () {
+                          context.push(AppConstants.routeSettings);
+                        },
+                      ),
+                      const Divider(height: 1),
+                      ListTile(
+                        leading: Icon(
+                          Icons.help_outline,
+                          color: colorScheme.primary,
+                        ),
+                        title: const Text('帮助中心'),
+                        trailing: const Icon(Icons.chevron_right),
+                        onTap: () {
+                          // TODO: 跳转到帮助中心
+                        },
+                      ),
+                      const Divider(height: 1),
+                      ListTile(
+                        leading: Icon(
+                          Icons.info_outline,
+                          color: colorScheme.primary,
+                        ),
+                        title: const Text('关于我们'),
+                        trailing: const Icon(Icons.chevron_right),
+                        onTap: () {
+                          // TODO: 跳转到关于我们页面
+                        },
+                      ),
+                      const Divider(height: 1),
+                      ListTile(
+                        leading: Icon(Icons.logout, color: Colors.red),
+                        title: const Text(
+                          '退出登录',
+                          style: TextStyle(color: Colors.red),
+                        ),
+                        onTap: () => _handleLogout(context),
+                      ),
+                    ],
+                  ),
+                ),
+                const SizedBox(height: 16),
+              ],
+            );
+          },
+        ),
       ),
     );
   }

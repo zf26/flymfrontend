@@ -3,6 +3,7 @@ import 'package:flymfrontend/services/api/auth_service.dart';
 import 'package:flymfrontend/services/api/consultation_service.dart';
 import 'package:flymfrontend/services/api/doctor_service.dart';
 import 'package:flymfrontend/services/api/upload_service.dart';
+import 'package:flymfrontend/services/chat/chat_service.dart';
 
 /// 服务定位器（简单的依赖注入容器）
 class ServiceLocator {
@@ -64,6 +65,14 @@ class ServiceLocator {
     return _services[UploadService] as UploadService;
   }
 
+  /// 获取聊天服务
+  ChatService getChatService() {
+    if (!_services.containsKey(ChatService)) {
+      throw Exception('ChatService not registered');
+    }
+    return _services[ChatService] as ChatService;
+  }
+
   /// 初始化所有服务
   void initialize() {
     // 注册API服务
@@ -72,5 +81,7 @@ class ServiceLocator {
     register<ConsultationService>(ConsultationService(getApiService()));
     register<DoctorService>(DoctorService(getApiService()));
     register<UploadService>(UploadService(getApiService()));
+    // 注册聊天服务（单例）
+    registerSingleton<ChatService>(() => ChatService());
   }
 }

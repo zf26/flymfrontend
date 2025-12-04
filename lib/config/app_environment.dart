@@ -1,3 +1,5 @@
+import 'dart:io';
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flymfrontend/config/app_config.dart';
 
 /// 应用环境枚举
@@ -23,12 +25,23 @@ class AppEnvironmentConfig {
 
   /// 根据环境获取API地址
   static String getApiBaseUrl() {
+    String baseUrl;
     switch (_environment) {
       case AppEnvironment.development:
-        return AppConfig.baseUrlDev;
+        baseUrl = AppConfig.baseUrlDev;
+        break;
       case AppEnvironment.production:
-        return AppConfig.baseUrlProd;
+        baseUrl = AppConfig.baseUrlProd;
+        break;
     }
+
+    // 在 Android 模拟器上，localhost 需要替换为 10.0.2.2
+    // 10.0.2.2 是 Android 模拟器访问宿主机 localhost 的特殊 IP
+    if (!kIsWeb && Platform.isAndroid && baseUrl.contains('192.168.127.1')) {
+      baseUrl = baseUrl.replaceAll('192.168.127.1', '192.168.127.1');
+    }
+
+    return baseUrl;
   }
 
   /// 是否启用日志

@@ -11,9 +11,11 @@ class ApiService {
 
   ApiService() {
     // 构建基础请求头
+    // 注意：GET 请求通常不需要 Content-Type，浏览器直接访问时也没有这个 header
+    // 使用浏览器常见的 User-Agent，可能有助于匹配到直接路由而不是 Gateway 路由
     final Map<String, dynamic> headers = {
-      'Content-Type': 'application/json',
-      'Accept': 'application/json',
+      'Accept': 'application/json, text/plain, */*',
+      'Accept-Language': 'zh-CN,zh;q=0.9,en;q=0.8',
     };
 
     // Web环境下添加额外请求头
@@ -27,7 +29,7 @@ class ApiService {
         baseUrl: AppEnvironmentConfig.getApiBaseUrl(),
         connectTimeout: Duration(milliseconds: AppConfig.connectTimeout),
         receiveTimeout: Duration(milliseconds: AppConfig.receiveTimeout),
-        headers: headers,
+        // headers: headers,
         // 设置响应类型
         responseType: ResponseType.json,
         // 允许跟随重定向
@@ -73,11 +75,16 @@ class ApiService {
     Options? options,
     CancelToken? cancelToken,
   }) async {
+    // POST 请求需要 Content-Type
+    final requestOptions = options ?? Options();
+    final headers = Map<String, dynamic>.from(requestOptions.headers ?? {});
+    headers['Content-Type'] = 'application/json';
+
     return await _dio.post(
       path,
       data: data,
       queryParameters: queryParameters,
-      options: options,
+      options: requestOptions.copyWith(headers: headers),
       cancelToken: cancelToken,
     );
   }
@@ -90,11 +97,16 @@ class ApiService {
     Options? options,
     CancelToken? cancelToken,
   }) async {
+    // PUT 请求需要 Content-Type
+    final requestOptions = options ?? Options();
+    final headers = Map<String, dynamic>.from(requestOptions.headers ?? {});
+    headers['Content-Type'] = 'application/json';
+
     return await _dio.put(
       path,
       data: data,
       queryParameters: queryParameters,
-      options: options,
+      options: requestOptions.copyWith(headers: headers),
       cancelToken: cancelToken,
     );
   }

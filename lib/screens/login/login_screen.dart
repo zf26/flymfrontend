@@ -1,11 +1,12 @@
 import 'dart:async';
-import 'dart:math';
+import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 import 'package:flymfrontend/config/app_constants.dart';
 import 'package:flymfrontend/providers/auth_provider.dart';
+import 'package:flymfrontend/core/di/service_locator.dart';
 
 /// 登录页
 class LoginScreen extends StatefulWidget {
@@ -25,7 +26,9 @@ class _LoginScreenState extends State<LoginScreen>
   final _loginPhoneController = TextEditingController();
   final _loginPasswordController = TextEditingController();
   final _loginCaptchaController = TextEditingController();
+  final _loginSmsCodeController = TextEditingController();
   bool _obscureLoginPassword = true;
+  bool _isSmsLogin = false;
 
   // 注册表单控制器
   final _registerPhoneController = TextEditingController();
@@ -34,12 +37,16 @@ class _LoginScreenState extends State<LoginScreen>
   bool _obscureRegisterPassword = true;
 
   // 图形验证码相关（登录用）
-  String _captchaCode = '';
+  String _captchaImageBase64 = ''; // base64 图片数据
+  String _captchaUuid = ''; // 验证码 uuid
+  bool _isLoadingCaptcha = false; // 是否正在加载验证码
   final GlobalKey _captchaKey = GlobalKey();
 
   // 短信验证码倒计时相关（注册用）
   int _smsCountdown = 0;
   Timer? _smsTimer;
+  int _loginSmsCountdown = 0;
+  Timer? _loginSmsTimer;
 
   @override
   void initState() {
@@ -54,31 +61,79 @@ class _LoginScreenState extends State<LoginScreen>
     _loginPhoneController.dispose();
     _loginPasswordController.dispose();
     _loginCaptchaController.dispose();
+    _loginSmsCodeController.dispose();
     _registerPhoneController.dispose();
     _registerPasswordController.dispose();
     _registerSmsCodeController.dispose();
     _smsTimer?.cancel();
+    _loginSmsTimer?.cancel();
     super.dispose();
   }
 
-  /// 生成新的验证码（前端模拟，后续替换为API调用）
-  void _generateCaptcha() {
-    // TODO: 后续替换为实际的API调用
-    // final response = await apiService.getCaptcha();
-    // _captchaCode = response.captchaCode;
+  /// 获取图形验证码
+  Future<void> _generateCaptcha() async {
+    if (_isLoadingCaptcha) return;
 
-    // 前端模拟：生成4位字母数字混合验证码
-    const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789'; // 排除易混淆字符
-    final random = Random();
-    _captchaCode = String.fromCharCodes(
-      Iterable.generate(
-        4,
-        (_) => chars.codeUnitAt(random.nextInt(chars.length)),
-      ),
-    );
+    setState(() {
+      _isLoadingCaptcha = true;
+    });
 
-    if (mounted) {
-      setState(() {});
+    try {
+      final authService = ServiceLocator().getAuthService();
+      final result = await authService.getImageCaptcha();
+
+      if (mounted) {
+        if (result.success && result.data != null) {
+          setState(() {
+            _captchaImageBase64 = result.data!['img'] as String? ?? '';
+            _captchaUuid = result.data!['uuid'] as String? ?? '';
+            _isLoadingCaptcha = false;
+          });
+        } else {
+          setState(() {
+            _isLoadingCaptcha = false;
+          });
+          if (mounted) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(
+                content: Text(result.message),
+                backgroundColor: Colors.red,
+                behavior: SnackBarBehavior.floating,
+              ),
+            );
+          }
+        }
+      }
+    } catch (e) {
+      if (mounted) {
+        setState(() {
+          _isLoadingCaptcha = false;
+        });
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('获取验证码失败: ${e.toString()}'),
+            backgroundColor: Colors.red,
+            behavior: SnackBarBehavior.floating,
+          ),
+        );
+      }
+    }
+  }
+
+  Future<void> _toggleSmsLoginMode() async {
+    setState(() {
+      _isSmsLogin = !_isSmsLogin;
+      if (_isSmsLogin) {
+        _loginCaptchaController.clear();
+      } else {
+        _loginSmsCodeController.clear();
+        _loginSmsTimer?.cancel();
+        _loginSmsCountdown = 0;
+      }
+    });
+
+    if (!_isSmsLogin) {
+      await _generateCaptcha();
     }
   }
 
@@ -87,26 +142,60 @@ class _LoginScreenState extends State<LoginScreen>
       return;
     }
 
-    // 验证验证码（不区分大小写）
-    final inputCode = _loginCaptchaController.text.trim().toUpperCase();
-    if (inputCode != _captchaCode.toUpperCase()) {
+    final authProvider = Provider.of<AuthProvider>(context, listen: false);
+
+    if (_isSmsLogin) {
+      final success = await authProvider.loginWithSmsCode(
+        _loginPhoneController.text.trim(),
+        _loginSmsCodeController.text.trim(),
+      );
+
+      if (mounted) {
+        if (success) {
+          context.go(AppConstants.routeHome);
+        } else {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(authProvider.errorMessage ?? '短信登录失败'),
+              backgroundColor: Colors.red,
+              behavior: SnackBarBehavior.floating,
+            ),
+          );
+        }
+      }
+      return;
+    }
+
+    // 验证验证码输入
+    final inputCode = _loginCaptchaController.text.trim();
+    if (inputCode.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
-          content: Text('验证码错误，请重新输入'),
+          content: Text('请输入验证码'),
           backgroundColor: Colors.red,
           behavior: SnackBarBehavior.floating,
         ),
       );
-      // 验证失败后刷新验证码
-      _generateCaptcha();
-      _loginCaptchaController.clear();
       return;
     }
 
-    final authProvider = Provider.of<AuthProvider>(context, listen: false);
+    if (_captchaUuid.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('验证码未加载，请刷新验证码'),
+          backgroundColor: Colors.red,
+          behavior: SnackBarBehavior.floating,
+        ),
+      );
+      await _generateCaptcha();
+      return;
+    }
+
     final success = await authProvider.login(
       _loginPhoneController.text.trim(),
       _loginPasswordController.text,
+      uuid: _captchaUuid,
+      code: inputCode,
     );
 
     if (mounted) {
@@ -120,8 +209,83 @@ class _LoginScreenState extends State<LoginScreen>
             behavior: SnackBarBehavior.floating,
           ),
         );
+        // 登录失败后刷新验证码
+        await _generateCaptcha();
+        _loginCaptchaController.clear();
       }
     }
+  }
+
+  /// 获取登录短信验证码
+  Future<void> _handleGetLoginSmsCode() async {
+    final phone = _loginPhoneController.text.trim();
+    if (phone.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('请输入手机号'),
+          backgroundColor: Colors.red,
+          behavior: SnackBarBehavior.floating,
+        ),
+      );
+      return;
+    }
+
+    if (!RegExp(r'^1[3-9]\d{9}$').hasMatch(phone)) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('请输入正确的手机号'),
+          backgroundColor: Colors.red,
+          behavior: SnackBarBehavior.floating,
+        ),
+      );
+      return;
+    }
+
+    if (_loginSmsCountdown > 0) {
+      return;
+    }
+
+    final authProvider = Provider.of<AuthProvider>(context, listen: false);
+    final success = await authProvider.sendSmsCode(phone);
+
+    if (mounted) {
+      if (success) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('验证码已发送'),
+            backgroundColor: Colors.green,
+            behavior: SnackBarBehavior.floating,
+          ),
+        );
+        _startLoginSmsCountdown();
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(authProvider.errorMessage ?? '获取验证码失败'),
+            backgroundColor: Colors.red,
+            behavior: SnackBarBehavior.floating,
+          ),
+        );
+      }
+    }
+  }
+
+  void _startLoginSmsCountdown() {
+    _loginSmsCountdown = 60;
+    _loginSmsTimer?.cancel();
+    _loginSmsTimer = Timer.periodic(const Duration(seconds: 1), (timer) {
+      if (mounted) {
+        setState(() {
+          if (_loginSmsCountdown > 0) {
+            _loginSmsCountdown--;
+          } else {
+            timer.cancel();
+          }
+        });
+      } else {
+        timer.cancel();
+      }
+    });
   }
 
   Future<void> _handleWeChatLogin() async {
@@ -462,141 +626,175 @@ class _LoginScreenState extends State<LoginScreen>
                       return null;
                     },
                   ),
-                  const SizedBox(height: 12),
-                  // 密码输入框
-                  TextFormField(
-                    controller: _loginPasswordController,
-                    obscureText: _obscureLoginPassword,
-                    style: const TextStyle(fontSize: 14),
-                    decoration: InputDecoration(
-                      labelText: '密码',
-                      hintText: '请输入密码',
-                      prefixIcon: Icon(
-                        Icons.lock_outline,
-                        size: 20,
-                        color: colorScheme.primary,
-                      ),
-                      suffixIcon: IconButton(
-                        icon: Icon(
-                          _obscureLoginPassword
-                              ? Icons.visibility_outlined
-                              : Icons.visibility_off_outlined,
+                  if (!_isSmsLogin) ...[
+                    const SizedBox(height: 12),
+                    // 密码输入框
+                    TextFormField(
+                      controller: _loginPasswordController,
+                      obscureText: _obscureLoginPassword,
+                      style: const TextStyle(fontSize: 14),
+                      decoration: InputDecoration(
+                        labelText: '密码',
+                        hintText: '请输入密码',
+                        prefixIcon: Icon(
+                          Icons.lock_outline,
                           size: 20,
-                          color: Colors.grey[600],
-                        ),
-                        onPressed: () {
-                          setState(() {
-                            _obscureLoginPassword = !_obscureLoginPassword;
-                          });
-                        },
-                      ),
-                      border: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(10),
-                      ),
-                      enabledBorder: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(10),
-                        borderSide: BorderSide(color: Colors.grey[300]!),
-                      ),
-                      focusedBorder: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(10),
-                        borderSide: BorderSide(
                           color: colorScheme.primary,
-                          width: 2,
                         ),
-                      ),
-                      filled: true,
-                      fillColor: Colors.grey[50],
-                      contentPadding: const EdgeInsets.symmetric(
-                        horizontal: 12,
-                        vertical: 12,
-                      ),
-                    ),
-                    validator: (value) {
-                      if (value == null || value.isEmpty) {
-                        return '请输入密码';
-                      }
-                      if (value.length < 6) {
-                        return '密码长度至少6位';
-                      }
-                      return null;
-                    },
-                  ),
-                  const SizedBox(height: 12),
-                  // 验证码输入框
-                  Row(
-                    children: [
-                      Expanded(
-                        child: TextFormField(
-                          controller: _loginCaptchaController,
-                          keyboardType: TextInputType.text,
-                          textCapitalization: TextCapitalization.characters,
-                          style: const TextStyle(
-                            fontSize: 14,
-                            letterSpacing: 2,
+                        suffixIcon: IconButton(
+                          icon: Icon(
+                            _obscureLoginPassword
+                                ? Icons.visibility_outlined
+                                : Icons.visibility_off_outlined,
+                            size: 20,
+                            color: Colors.grey[600],
                           ),
-                          decoration: InputDecoration(
-                            labelText: '验证码',
-                            hintText: '请输入验证码',
-                            prefixIcon: Icon(
-                              Icons.verified_outlined,
-                              size: 20,
-                              color: colorScheme.primary,
-                            ),
-                            border: OutlineInputBorder(
-                              borderRadius: BorderRadius.circular(10),
-                            ),
-                            enabledBorder: OutlineInputBorder(
-                              borderRadius: BorderRadius.circular(10),
-                              borderSide: BorderSide(color: Colors.grey[300]!),
-                            ),
-                            focusedBorder: OutlineInputBorder(
-                              borderRadius: BorderRadius.circular(10),
-                              borderSide: BorderSide(
-                                color: colorScheme.primary,
-                                width: 2,
-                              ),
-                            ),
-                            filled: true,
-                            fillColor: Colors.grey[50],
-                            contentPadding: const EdgeInsets.symmetric(
-                              horizontal: 12,
-                              vertical: 12,
-                            ),
-                          ),
-                          validator: (value) {
-                            if (value == null || value.isEmpty) {
-                              return '请输入验证码';
-                            }
-                            if (value.length != 4) {
-                              return '验证码为4位字符';
-                            }
-                            return null;
+                          onPressed: () {
+                            setState(() {
+                              _obscureLoginPassword = !_obscureLoginPassword;
+                            });
                           },
                         ),
-                      ),
-                      const SizedBox(width: 8),
-                      // 图形验证码
-                      GestureDetector(
-                        onTap: _generateCaptcha,
-                        child: Container(
-                          width: 100,
-                          height: 48,
-                          decoration: BoxDecoration(
-                            color: Colors.grey[50],
-                            borderRadius: BorderRadius.circular(10),
-                            border: Border.all(
-                              color: Colors.grey[300]!,
-                              width: 1,
-                            ),
-                          ),
-                          child: _CaptchaImage(
-                            code: _captchaCode,
-                            key: _captchaKey,
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(10),
+                        ),
+                        enabledBorder: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(10),
+                          borderSide: BorderSide(color: Colors.grey[300]!),
+                        ),
+                        focusedBorder: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(10),
+                          borderSide: BorderSide(
+                            color: colorScheme.primary,
+                            width: 2,
                           ),
                         ),
+                        filled: true,
+                        fillColor: Colors.grey[50],
+                        contentPadding: const EdgeInsets.symmetric(
+                          horizontal: 12,
+                          vertical: 12,
+                        ),
                       ),
-                    ],
-                  ),
+                      validator: (value) {
+                        if (_isSmsLogin) {
+                          return null;
+                        }
+                        if (value == null || value.isEmpty) {
+                          return '请输入密码';
+                        }
+                        if (value.length < 6) {
+                          return '密码长度至少6位';
+                        }
+                        return null;
+                      },
+                    ),
+                    const SizedBox(height: 12),
+                    // 验证码输入框
+                    Row(
+                      children: [
+                        Expanded(
+                          child: TextFormField(
+                            controller: _loginCaptchaController,
+                            keyboardType: TextInputType.text,
+                            textCapitalization: TextCapitalization.characters,
+                            style: const TextStyle(
+                              fontSize: 14,
+                              letterSpacing: 2,
+                            ),
+                            decoration: InputDecoration(
+                              labelText: '验证码',
+                              hintText: '请输入验证码',
+                              prefixIcon: Icon(
+                                Icons.verified_outlined,
+                                size: 20,
+                                color: colorScheme.primary,
+                              ),
+                              border: OutlineInputBorder(
+                                borderRadius: BorderRadius.circular(10),
+                              ),
+                              enabledBorder: OutlineInputBorder(
+                                borderRadius: BorderRadius.circular(10),
+                                borderSide: BorderSide(
+                                  color: Colors.grey[300]!,
+                                ),
+                              ),
+                              focusedBorder: OutlineInputBorder(
+                                borderRadius: BorderRadius.circular(10),
+                                borderSide: BorderSide(
+                                  color: colorScheme.primary,
+                                  width: 2,
+                                ),
+                              ),
+                              filled: true,
+                              fillColor: Colors.grey[50],
+                              contentPadding: const EdgeInsets.symmetric(
+                                horizontal: 12,
+                                vertical: 12,
+                              ),
+                            ),
+                            validator: (value) {
+                              if (_isSmsLogin) {
+                                return null;
+                              }
+                              if (value == null || value.isEmpty) {
+                                return '请输入验证码';
+                              }
+                              return null;
+                            },
+                          ),
+                        ),
+                        const SizedBox(width: 8),
+                        // 图形验证码
+                        GestureDetector(
+                          onTap: _generateCaptcha,
+                          child: Container(
+                            width: 100,
+                            height: 48,
+                            decoration: BoxDecoration(
+                              color: Colors.grey[50],
+                              borderRadius: BorderRadius.circular(10),
+                              border: Border.all(
+                                color: Colors.grey[300]!,
+                                width: 1,
+                              ),
+                            ),
+                            child:
+                                _isLoadingCaptcha
+                                    ? const Center(
+                                      child: SizedBox(
+                                        width: 20,
+                                        height: 20,
+                                        child: CircularProgressIndicator(
+                                          strokeWidth: 2,
+                                        ),
+                                      ),
+                                    )
+                                    : _captchaImageBase64.isNotEmpty
+                                    ? _ImageCaptchaWidget(
+                                      imageBase64: _captchaImageBase64,
+                                      key: _captchaKey,
+                                    )
+                                    : const Center(
+                                      child: Icon(
+                                        Icons.refresh,
+                                        size: 20,
+                                        color: Colors.grey,
+                                      ),
+                                    ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ] else ...[
+                    const SizedBox(height: 12),
+                    _LoginSmsCodeField(
+                      controller: _loginSmsCodeController,
+                      countdown: _loginSmsCountdown,
+                      onGetCode: _handleGetLoginSmsCode,
+                      colorScheme: colorScheme,
+                    ),
+                  ],
                   const SizedBox(height: 16),
                   // 登录按钮
                   Consumer<AuthProvider>(
@@ -690,6 +888,13 @@ class _LoginScreenState extends State<LoginScreen>
                             authProvider.isLoading ? null : _handleAlipayLogin,
                       );
                     },
+                  ),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: _SmsLoginToggleButton(
+                    isActive: _isSmsLogin,
+                    onPressed: _toggleSmsLoginMode,
                   ),
                 ),
               ],
@@ -983,146 +1188,41 @@ class _LoginScreenState extends State<LoginScreen>
   }
 }
 
-/// 图形验证码组件
-class _CaptchaImage extends StatelessWidget {
-  final String code;
+/// 图形验证码组件（显示 base64 图片）
+class _ImageCaptchaWidget extends StatelessWidget {
+  final String imageBase64;
 
-  const _CaptchaImage({required this.code, super.key});
+  const _ImageCaptchaWidget({required this.imageBase64, super.key});
 
   @override
   Widget build(BuildContext context) {
-    return CustomPaint(
-      size: const Size(100, 48),
-      painter: _CaptchaPainter(code: code),
-    );
-  }
-}
+    try {
+      // base64 字符串可能包含 data:image/png;base64, 前缀，需要处理
+      String base64String = imageBase64;
+      if (base64String.contains(',')) {
+        base64String = base64String.split(',').last;
+      }
 
-/// 验证码绘制器
-class _CaptchaPainter extends CustomPainter {
-  final String code;
-  late final Random _random;
-
-  _CaptchaPainter({required this.code}) {
-    // 使用验证码字符串的哈希值作为随机种子，确保相同验证码绘制效果一致
-    _random = Random(code.hashCode);
-  }
-
-  @override
-  void paint(Canvas canvas, Size size) {
-    // 绘制背景
-    final bgPaint =
-        Paint()
-          ..color = _getRandomLightColor()
-          ..style = PaintingStyle.fill;
-    canvas.drawRRect(
-      RRect.fromRectAndRadius(
-        Rect.fromLTWH(0, 0, size.width, size.height),
-        const Radius.circular(10),
-      ),
-      bgPaint,
-    );
-
-    // 绘制干扰线
-    for (int i = 0; i < 3; i++) {
-      final linePaint =
-          Paint()
-            ..color = _getRandomColor()
-            ..strokeWidth = 1.5;
-      canvas.drawLine(
-        Offset(
-          _random.nextDouble() * size.width,
-          _random.nextDouble() * size.height,
+      final imageBytes = base64Decode(base64String);
+      return ClipRRect(
+        borderRadius: BorderRadius.circular(10),
+        child: Image.memory(
+          imageBytes,
+          width: 100,
+          height: 48,
+          fit: BoxFit.cover,
+          errorBuilder: (context, error, stackTrace) {
+            return const Center(
+              child: Icon(Icons.error_outline, size: 20, color: Colors.red),
+            );
+          },
         ),
-        Offset(
-          _random.nextDouble() * size.width,
-          _random.nextDouble() * size.height,
-        ),
-        linePaint,
+      );
+    } catch (e) {
+      return const Center(
+        child: Icon(Icons.error_outline, size: 20, color: Colors.red),
       );
     }
-
-    // 绘制干扰点
-    for (int i = 0; i < 20; i++) {
-      final pointPaint =
-          Paint()
-            ..color = _getRandomColor()
-            ..strokeWidth = 1;
-      canvas.drawCircle(
-        Offset(
-          _random.nextDouble() * size.width,
-          _random.nextDouble() * size.height,
-        ),
-        1,
-        pointPaint,
-      );
-    }
-
-    // 绘制验证码文字
-    final textPainter = TextPainter(
-      textAlign: TextAlign.center,
-      textDirection: TextDirection.ltr,
-    );
-
-    for (int i = 0; i < code.length; i++) {
-      final char = code[i];
-      final textStyle = TextStyle(
-        fontSize: 18 + _random.nextDouble() * 4 - 2, // 18-20之间随机
-        fontWeight: FontWeight.bold,
-        color: _getRandomDarkColor(),
-        letterSpacing: 0,
-      );
-
-      textPainter.text = TextSpan(text: char, style: textStyle);
-      textPainter.layout();
-
-      // 计算字符位置（居中分布）
-      final x = (size.width / code.length) * (i + 0.5) - textPainter.width / 2;
-      final y = (size.height - textPainter.height) / 2;
-
-      // 添加随机旋转
-      canvas.save();
-      canvas.translate(x + textPainter.width / 2, y + textPainter.height / 2);
-      canvas.rotate((_random.nextDouble() - 0.5) * 0.3); // -15度到15度
-      textPainter.paint(
-        canvas,
-        Offset(-textPainter.width / 2, -textPainter.height / 2),
-      );
-      canvas.restore();
-    }
-  }
-
-  @override
-  bool shouldRepaint(covariant CustomPainter oldDelegate) => true;
-
-  Color _getRandomColor() {
-    return Color.fromRGBO(
-      _random.nextInt(200),
-      _random.nextInt(200),
-      _random.nextInt(200),
-      0.8,
-    );
-  }
-
-  Color _getRandomLightColor() {
-    return Color.fromRGBO(
-      240 + _random.nextInt(15),
-      240 + _random.nextInt(15),
-      240 + _random.nextInt(15),
-      1.0,
-    );
-  }
-
-  Color _getRandomDarkColor() {
-    final colors = [
-      const Color(0xFF1E88E5),
-      const Color(0xFF43A047),
-      const Color(0xFFE53935),
-      const Color(0xFFFB8C00),
-      const Color(0xFF7B1FA2),
-      const Color(0xFF00897B),
-    ];
-    return colors[_random.nextInt(colors.length)];
   }
 }
 
@@ -1195,6 +1295,156 @@ class _ThirdPartyLoginButton extends StatelessWidget {
             style: TextStyle(
               fontSize: 12,
               color: color,
+              fontWeight: FontWeight.w500,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+/// 登录短信验证码输入组件
+class _LoginSmsCodeField extends StatelessWidget {
+  final TextEditingController controller;
+  final int countdown;
+  final VoidCallback onGetCode;
+  final ColorScheme colorScheme;
+
+  const _LoginSmsCodeField({
+    required this.controller,
+    required this.countdown,
+    required this.onGetCode,
+    required this.colorScheme,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      children: [
+        Expanded(
+          child: TextFormField(
+            controller: controller,
+            keyboardType: TextInputType.number,
+            style: const TextStyle(fontSize: 14),
+            decoration: InputDecoration(
+              labelText: '验证码',
+              hintText: '请输入验证码',
+              prefixIcon: Icon(
+                Icons.sms_outlined,
+                size: 20,
+                color: colorScheme.primary,
+              ),
+              border: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(10),
+              ),
+              enabledBorder: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(10),
+                borderSide: BorderSide(color: Colors.grey[300]!),
+              ),
+              focusedBorder: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(10),
+                borderSide: BorderSide(color: colorScheme.primary, width: 2),
+              ),
+              filled: true,
+              fillColor: Colors.grey[50],
+              contentPadding: const EdgeInsets.symmetric(
+                horizontal: 12,
+                vertical: 12,
+              ),
+            ),
+            validator: (value) {
+              if (value == null || value.isEmpty) {
+                return '请输入验证码';
+              }
+              if (value.length != 6) {
+                return '验证码为6位数字';
+              }
+              return null;
+            },
+          ),
+        ),
+        const SizedBox(width: 8),
+        Consumer<AuthProvider>(
+          builder: (context, authProvider, child) {
+            final bool isDisabled = authProvider.isLoading || countdown > 0;
+            return SizedBox(
+              width: 120,
+              height: 48,
+              child: ElevatedButton(
+                onPressed: isDisabled ? null : onGetCode,
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: colorScheme.primary,
+                  foregroundColor: Colors.white,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                  elevation: 0,
+                  disabledBackgroundColor: Colors.grey[300],
+                ),
+                child:
+                    countdown > 0
+                        ? Text(
+                          '${countdown}s',
+                          style: const TextStyle(fontSize: 12),
+                        )
+                        : const Text(
+                          '获取验证码',
+                          style: TextStyle(
+                            fontSize: 12,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+              ),
+            );
+          },
+        ),
+      ],
+    );
+  }
+}
+
+/// 短信登录切换按钮
+class _SmsLoginToggleButton extends StatelessWidget {
+  final bool isActive;
+  final VoidCallback onPressed;
+
+  const _SmsLoginToggleButton({
+    required this.isActive,
+    required this.onPressed,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
+    final Color activeColor = colorScheme.primary;
+    final Color inactiveColor = Colors.grey[600]!;
+
+    return TextButton(
+      onPressed: onPressed,
+      style: TextButton.styleFrom(
+        padding: const EdgeInsets.symmetric(vertical: 10),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(10),
+          side: BorderSide(color: isActive ? activeColor : Colors.transparent),
+        ),
+        backgroundColor:
+            isActive ? activeColor.withOpacity(0.1) : Colors.transparent,
+      ),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(
+            Icons.sms_outlined,
+            size: 28,
+            color: isActive ? activeColor : inactiveColor,
+          ),
+          const SizedBox(height: 4),
+          Text(
+            isActive ? '短信登录中' : '短信登录',
+            style: TextStyle(
+              fontSize: 12,
+              color: isActive ? activeColor : inactiveColor,
               fontWeight: FontWeight.w500,
             ),
           ),

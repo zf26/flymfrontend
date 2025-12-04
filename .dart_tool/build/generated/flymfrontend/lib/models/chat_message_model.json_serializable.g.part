@@ -1,0 +1,50 @@
+// **************************************************************************
+// JsonSerializableGenerator
+// **************************************************************************
+
+ChatMessageModel _$ChatMessageModelFromJson(Map<String, dynamic> json) =>
+    ChatMessageModel(
+      id: json['id'] as String?,
+      conversationId: json['conversationId'] as String,
+      senderId: json['senderId'] as String,
+      senderName: json['senderName'] as String?,
+      senderAvatar: json['senderAvatar'] as String?,
+      receiverId: json['receiverId'] as String?,
+      content: json['content'] as String,
+      type:
+          $enumDecodeNullable(_$ChatMessageTypeEnumMap, json['type']) ??
+          ChatMessageType.text,
+      status: $enumDecodeNullable(_$MessageStatusEnumMap, json['status']),
+      timestamp: (json['timestamp'] as num?)?.toInt(),
+      extras: json['extras'] as Map<String, dynamic>?,
+    );
+
+Map<String, dynamic> _$ChatMessageModelToJson(ChatMessageModel instance) =>
+    <String, dynamic>{
+      'id': instance.id,
+      'conversationId': instance.conversationId,
+      'senderId': instance.senderId,
+      'senderName': instance.senderName,
+      'senderAvatar': instance.senderAvatar,
+      'receiverId': instance.receiverId,
+      'content': instance.content,
+      'type': _$ChatMessageTypeEnumMap[instance.type]!,
+      'status': _$MessageStatusEnumMap[instance.status],
+      'timestamp': instance.timestamp,
+      'extras': instance.extras,
+    };
+
+const _$ChatMessageTypeEnumMap = {
+  ChatMessageType.text: 'TEXT',
+  ChatMessageType.image: 'IMAGE',
+  ChatMessageType.file: 'FILE',
+  ChatMessageType.system: 'SYSTEM',
+};
+
+const _$MessageStatusEnumMap = {
+  MessageStatus.sending: 'SENDING',
+  MessageStatus.sent: 'SENT',
+  MessageStatus.delivered: 'DELIVERED',
+  MessageStatus.read: 'READ',
+  MessageStatus.failed: 'FAILED',
+};

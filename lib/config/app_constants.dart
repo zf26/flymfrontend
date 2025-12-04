@@ -11,6 +11,8 @@ class AppConstants {
   static const String routeDoctorDetail = '/doctor/detail';
   static const String routeProfile = '/profile';
   static const String routeSettings = '/settings';
+  static const String routeChatContacts = '/chat/contacts';
+  static const String routeChat = '/chat';
 
   // 问诊状态
   static const String consultationStatusPending = 'pending'; // 待接诊

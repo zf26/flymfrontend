@@ -11,6 +11,8 @@ import 'package:flymfrontend/screens/consultation/create_consultation_screen.dar
 import 'package:flymfrontend/screens/doctor/doctor_list_screen.dart';
 import 'package:flymfrontend/screens/profile/profile_screen.dart';
 import 'package:flymfrontend/screens/settings/settings_screen.dart';
+import 'package:flymfrontend/screens/chat/chat_screen.dart';
+import 'package:flymfrontend/screens/chat/chat_contacts_screen.dart';
 
 /// 路由配置
 class AppRouter {
@@ -71,6 +73,23 @@ class AppRouter {
           path: AppConstants.routeSettings,
           name: 'settings',
           builder: (context, state) => const SettingsScreen(),
+        ),
+        GoRoute(
+          path: AppConstants.routeChatContacts,
+          name: 'chat_contacts',
+          builder: (context, state) => const ChatContactsScreen(),
+        ),
+        GoRoute(
+          path: AppConstants.routeChat,
+          name: 'chat',
+          builder: (context, state) {
+            final title = state.uri.queryParameters['title'];
+            final avatar = state.uri.queryParameters['avatar'];
+            return ChatScreen(
+              conversationTitle: title ?? '王心研 · 主治医师',
+              avatarUrl: avatar,
+            );
+          },
         ),
       ],
       errorBuilder:

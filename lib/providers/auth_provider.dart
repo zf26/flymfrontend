@@ -45,13 +45,23 @@ class AuthProvider with ChangeNotifier {
   }
 
   /// 登录
-  Future<bool> login(String phone, String password) async {
+  Future<bool> login(
+    String phone,
+    String password, {
+    String? uuid,
+    String? code,
+  }) async {
     _isLoading = true;
     _errorMessage = null;
     notifyListeners();
 
     try {
-      final result = await _authService.login(phone, password);
+      final result = await _authService.login(
+        phone,
+        password,
+        uuid: uuid,
+        code: code,
+      );
       if (result.success && result.data != null) {
         // 保存用户信息
         final userData = result.data!['user'];
@@ -73,6 +83,41 @@ class AuthProvider with ChangeNotifier {
       }
     } catch (e) {
       LoggerUtil.e('登录失败', e);
+      _errorMessage = ExceptionHandler.getErrorMessage(e);
+      _isLoading = false;
+      notifyListeners();
+      return false;
+    }
+  }
+
+  /// 短信验证码登录
+  Future<bool> loginWithSmsCode(String phone, String smsCode) async {
+    _isLoading = true;
+    _errorMessage = null;
+    notifyListeners();
+
+    try {
+      final result = await _authService.loginWithSmsCode(phone, smsCode);
+      if (result.success && result.data != null) {
+        final userData = result.data!['user'];
+        if (userData != null) {
+          _user = UserModel.fromJson(userData as Map<String, dynamic>);
+          await StorageUtil.setString(
+            AppConfig.keyUserInfo,
+            jsonEncode(_user!.toJson()),
+          );
+        }
+        _isLoading = false;
+        notifyListeners();
+        return true;
+      } else {
+        _errorMessage = result.message;
+        _isLoading = false;
+        notifyListeners();
+        return false;
+      }
+    } catch (e) {
+      LoggerUtil.e('短信登录失败', e);
       _errorMessage = ExceptionHandler.getErrorMessage(e);
       _isLoading = false;
       notifyListeners();
