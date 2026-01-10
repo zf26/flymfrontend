@@ -85,9 +85,13 @@ class AppRouter {
           builder: (context, state) {
             final title = state.uri.queryParameters['title'];
             final avatar = state.uri.queryParameters['avatar'];
+            final roomId = state.uri.queryParameters['roomId'];
+            final targetUserId = state.uri.queryParameters['targetUserId'];
             return ChatScreen(
               conversationTitle: title ?? '王心研 · 主治医师',
               avatarUrl: avatar,
+              roomId: roomId,
+              targetUserId: targetUserId,
             );
           },
         ),

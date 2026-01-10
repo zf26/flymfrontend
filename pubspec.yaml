@@ -23,6 +23,9 @@ dependencies:
   # 网络请求
   dio: ^5.7.0
 
+  # 加解密（AES-GCM 等），用于 IM 端到端加密
+  cryptography: ^2.7.0
+
   # 本地存储
   shared_preferences: ^2.3.3
 

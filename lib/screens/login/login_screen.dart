@@ -157,8 +157,9 @@ class _LoginScreenState extends State<LoginScreen>
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
               content: Text(authProvider.errorMessage ?? '短信登录失败'),
-              backgroundColor: Colors.red,
+              backgroundColor: const Color.fromARGB(255, 244, 242, 120),
               behavior: SnackBarBehavior.floating,
+              margin: const EdgeInsets.only(top: 16, left: 16, right: 16),
             ),
           );
         }

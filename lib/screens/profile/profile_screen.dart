@@ -15,6 +15,54 @@ String _formatPhone(String? phone) {
   return phone;
 }
 
+/// 构建头像 Widget
+Widget _buildAvatar(String? avatarUrl, ColorScheme colorScheme) {
+  // 默认头像
+  final defaultAvatar = CircleAvatar(
+    radius: 30,
+    backgroundColor: colorScheme.primary.withOpacity(0.1),
+    child: Icon(Icons.person, size: 30, color: colorScheme.primary),
+  );
+
+  if (avatarUrl == null || avatarUrl.isEmpty) {
+    return defaultAvatar;
+  }
+
+  // 使用 ClipOval + Image.network 来确保图片能正确显示
+  return ClipOval(
+    child: Image.network(
+      avatarUrl,
+      width: 60,
+      height: 60,
+      fit: BoxFit.cover,
+      cacheWidth: 120, // 缓存宽度，优化内存使用
+      cacheHeight: 120, // 缓存高度，优化内存使用
+      errorBuilder: (context, error, stackTrace) {
+        debugPrint('头像加载失败: $error');
+        return defaultAvatar;
+      },
+      loadingBuilder: (context, child, loadingProgress) {
+        if (loadingProgress == null) {
+          return child;
+        }
+        return CircleAvatar(
+          radius: 30,
+          backgroundColor: colorScheme.primary.withOpacity(0.1),
+          child: CircularProgressIndicator(
+            value:
+                loadingProgress.expectedTotalBytes != null
+                    ? loadingProgress.cumulativeBytesLoaded /
+                        loadingProgress.expectedTotalBytes!
+                    : null,
+            strokeWidth: 2,
+            color: colorScheme.primary,
+          ),
+        );
+      },
+    ),
+  );
+}
+
 /// 个人中心页
 class ProfileScreen extends StatelessWidget {
   const ProfileScreen({super.key});
@@ -64,6 +112,7 @@ class ProfileScreen extends StatelessWidget {
             final user = authProvider.user;
             final phone = _formatPhone(user?.phone);
             final displayName = user?.name ?? '用户';
+            final avatarUrl = user?.avatar;
 
             return ListView(
               padding: const EdgeInsets.fromLTRB(16, 16, 16, 32),
@@ -72,15 +121,7 @@ class ProfileScreen extends StatelessWidget {
                 Card(
                   child: ListTile(
                     contentPadding: const EdgeInsets.all(16),
-                    leading: CircleAvatar(
-                      radius: 30,
-                      backgroundColor: colorScheme.primary.withOpacity(0.1),
-                      child: Icon(
-                        Icons.person,
-                        size: 30,
-                        color: colorScheme.primary,
-                      ),
-                    ),
+                    leading: _buildAvatar(avatarUrl, colorScheme),
                     title: Text(
                       displayName,
                       style: const TextStyle(
@@ -96,10 +137,15 @@ class ProfileScreen extends StatelessWidget {
                 ),
                 const SizedBox(height: 16),
 
-                // 功能菜单卡片
+                // 功能菜单和设置菜单卡片
                 Card(
+                  clipBehavior: Clip.antiAlias,
                   child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    mainAxisAlignment: MainAxisAlignment.start,
                     children: [
+                      // 功能菜单
                       ListTile(
                         leading: Icon(
                           Icons.person_outline,
@@ -135,26 +181,6 @@ class ProfileScreen extends StatelessWidget {
                           // TODO: 跳转到健康档案页面
                         },
                       ),
-                    ],
-                  ),
-                ),
-                const SizedBox(height: 16),
-
-                // 设置菜单卡片
-                Card(
-                  child: Column(
-                    children: [
-                      ListTile(
-                        leading: Icon(
-                          Icons.settings_outlined,
-                          color: colorScheme.primary,
-                        ),
-                        title: const Text('设置'),
-                        trailing: const Icon(Icons.chevron_right),
-                        onTap: () {
-                          context.push(AppConstants.routeSettings);
-                        },
-                      ),
                       const Divider(height: 1),
                       ListTile(
                         leading: Icon(
@@ -177,6 +203,19 @@ class ProfileScreen extends StatelessWidget {
                         trailing: const Icon(Icons.chevron_right),
                         onTap: () {
                           // TODO: 跳转到关于我们页面
+                        },
+                      ),
+                      const Divider(height: 1),
+                      // 设置菜单
+                      ListTile(
+                        leading: Icon(
+                          Icons.settings_outlined,
+                          color: colorScheme.primary,
+                        ),
+                        title: const Text('设置'),
+                        trailing: const Icon(Icons.chevron_right),
+                        onTap: () {
+                          context.push(AppConstants.routeSettings);
                         },
                       ),
                       const Divider(height: 1),

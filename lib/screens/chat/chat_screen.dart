@@ -1,7 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
+import 'package:provider/provider.dart';
 import 'package:flymfrontend/core/theme/app_theme.dart';
+import 'package:flymfrontend/core/di/service_locator.dart';
 import 'package:flymfrontend/models/chat_message_model.dart';
+import 'package:flymfrontend/providers/auth_provider.dart';
+import 'package:flymfrontend/screens/chat/video_call_screen.dart';
+import 'package:flymfrontend/services/api/im_service.dart';
+import 'package:flymfrontend/services/chat/chat_service.dart';
+import 'package:flymfrontend/services/chat/conversation_crypto.dart';
 
 /// 仿微信聊天界面
 class ChatScreen extends StatefulWidget {
@@ -9,10 +16,16 @@ class ChatScreen extends StatefulWidget {
     super.key,
     this.conversationTitle = '王心研 · 主治医师',
     this.avatarUrl,
+    this.roomId,
+    this.targetUserId,
   });
 
   final String conversationTitle;
   final String? avatarUrl;
+
+  final String? roomId;
+
+  final String? targetUserId;
 
   @override
   State<ChatScreen> createState() => _ChatScreenState();
@@ -22,67 +35,166 @@ class _ChatScreenState extends State<ChatScreen> {
   final _inputController = TextEditingController();
   final _scrollController = ScrollController();
   final _dateFormatter = DateFormat('MM月dd日 HH:mm');
-  final String _currentUserId = 'patient_demo';
-  final String _doctorUserId = 'doctor_001';
-  late final List<ChatMessageModel> _messages;
+  String? _currentUserId;
+  String? _targetUserId;
+  String? _roomId;
+  late List<_UiMessage> _messages;
+  bool _isLoading = false;
+
+  late final ChatService _chatService;
+  late final ImService _imService;
+  ConversationCrypto? _crypto;
 
   @override
   void initState() {
     super.initState();
-    _messages = _buildMockMessages();
+    _chatService = ServiceLocator().getChatService();
+    _imService = ServiceLocator().getImService();
+    _roomId = widget.roomId;
+    _targetUserId = widget.targetUserId;
+
+    if (_roomId != null && _targetUserId != null) {
+      _initRealChat();
+    } else {
+      _currentUserId = 'patient_demo';
+      _targetUserId ??= 'doctor_001';
+      _messages = _buildMockMessages();
+    }
   }
 
   @override
   void dispose() {
     _inputController.dispose();
     _scrollController.dispose();
+    _chatService.unsubscribe('personal_chat');
+    if (_roomId != null) {
+      _chatService.unsubscribe('room_${_roomId!}');
+    }
     super.dispose();
   }
 
-  List<ChatMessageModel> _buildMockMessages() {
+  List<_UiMessage> _buildMockMessages() {
     final now = DateTime.now();
+    final myId = _currentUserId ?? 'patient_demo';
+    final doctorId = _targetUserId ?? 'doctor_001';
     return [
-      ChatMessageModel(
-        id: '1',
-        fromUserId: _doctorUserId,
-        toUserId: _currentUserId,
+      _UiMessage(
+        fromUserId: doctorId,
+        toUserId: myId,
         content: '您好，我是王心研医生，请问哪里不舒服？',
         timestamp:
             now.subtract(const Duration(minutes: 18)).millisecondsSinceEpoch,
       ),
-      ChatMessageModel(
-        id: '2',
-        fromUserId: _currentUserId,
-        toUserId: _doctorUserId,
+      _UiMessage(
+        fromUserId: myId,
+        toUserId: doctorId,
         content: '最近一直咳嗽，晚上更严重一些。',
         timestamp:
             now.subtract(const Duration(minutes: 17)).millisecondsSinceEpoch,
       ),
-      ChatMessageModel(
-        id: '3',
-        fromUserId: _doctorUserId,
-        toUserId: _currentUserId,
+      _UiMessage(
+        fromUserId: doctorId,
+        toUserId: myId,
         content: '有发烧或者胸闷的情况吗？',
         timestamp:
             now.subtract(const Duration(minutes: 15)).millisecondsSinceEpoch,
       ),
-      ChatMessageModel(
-        id: '4',
-        fromUserId: _currentUserId,
-        toUserId: _doctorUserId,
+      _UiMessage(
+        fromUserId: myId,
+        toUserId: doctorId,
         content: '偶尔会有轻微发烧，最高 37.8°。',
         timestamp:
             now.subtract(const Duration(minutes: 14)).millisecondsSinceEpoch,
       ),
-      ChatMessageModel(
-        id: '5',
-        fromUserId: _doctorUserId,
-        toUserId: _currentUserId,
+      _UiMessage(
+        fromUserId: doctorId,
+        toUserId: myId,
         content: '好的，我先了解一下您的既往病史。',
         timestamp:
             now.subtract(const Duration(minutes: 12)).millisecondsSinceEpoch,
       ),
     ];
+  }
+
+  Future<void> _initRealChat() async {
+    final auth = context.read<AuthProvider>();
+    _currentUserId = auth.user?.id;
+    if (_currentUserId == null) {
+      _currentUserId = 'patient_demo';
+    }
+    _targetUserId ??= widget.targetUserId;
+    _roomId ??= widget.roomId;
+    if (_roomId == null || _targetUserId == null) {
+      _messages = _buildMockMessages();
+      return;
+    }
+
+    setState(() {
+      _isLoading = true;
+      _messages = [];
+    });
+
+    try {
+      final keyResult = await _imService.getConversationKey(_roomId!);
+      if (keyResult.success && keyResult.data != null) {
+        _crypto = ConversationCrypto.fromBase64Key(keyResult.data!);
+      }
+    } catch (_) {}
+
+    try {
+      final historyResult = await _imService.getPrivateHistory(
+        targetUserId: _targetUserId!,
+        roomId: _roomId!,
+        limit: 100,
+      );
+      if (historyResult.success && historyResult.data != null) {
+        final items = historyResult.data!;
+        final uiList = <_UiMessage>[];
+        for (final item in items) {
+          var text = item.content;
+          if (_crypto != null) {
+            try {
+              text = await _crypto!.decryptContent(item.content);
+            } catch (_) {}
+          }
+          uiList.add(
+            _UiMessage(
+              fromUserId: item.fromUserId ?? '',
+              toUserId: item.toUserId,
+              content: text,
+              timestamp: item.timestamp,
+            ),
+          );
+        }
+        if (mounted) {
+          setState(() {
+            _messages = uiList;
+          });
+          _scrollToBottom();
+        }
+      }
+    } catch (_) {}
+
+    if (mounted) {
+      setState(() {
+        _isLoading = false;
+      });
+    }
+
+    await _chatService.connect();
+
+    if (_roomId != null) {
+      _chatService.subscribe(
+        destination: ChatService.roomTopic(_roomId!),
+        subscriptionId: 'room_${_roomId!}',
+        onMessage: _handleIncomingMessage,
+      );
+    }
+    _chatService.subscribe(
+      destination: ChatService.personalChatQueue,
+      subscriptionId: 'personal_chat',
+      onMessage: _handleIncomingMessage,
+    );
   }
 
   @override
@@ -158,7 +270,30 @@ class _ChatScreenState extends State<ChatScreen> {
         IconButton(
           tooltip: '视频问诊',
           icon: const Icon(Icons.video_call_outlined),
-          onPressed: () {},
+          onPressed: () {
+            if (_roomId == null || _targetUserId == null) {
+              ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(content: Text('当前会话暂不支持视频通话')),
+              );
+              return;
+            }
+            final remoteId = int.tryParse(_targetUserId!);
+            if (remoteId == null) {
+              ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(content: Text('对方用户ID无效，无法发起视频通话')),
+              );
+              return;
+            }
+            Navigator.of(context).push(
+              MaterialPageRoute(
+                builder: (_) => VideoCallScreen(
+                  remoteUserId: remoteId,
+                  roomId: _roomId!,
+                  title: widget.conversationTitle,
+                ),
+              ),
+            );
+          },
         ),
         IconButton(
           tooltip: '更多',
@@ -221,65 +356,77 @@ class _ChatScreenState extends State<ChatScreen> {
   Widget _buildMessageList() {
     return Container(
       color: const Color(0xFFEDEDED),
-      child: ListView.builder(
-        controller: _scrollController,
-        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 16),
-        itemCount: _messages.length,
-        itemBuilder: (context, index) {
-          final message = _messages[index];
-          final isMine = message.isFromCurrentUser(_currentUserId);
-          final showTime = _shouldShowTimeSeparator(index);
+      child: Stack(
+        children: [
+          ListView.builder(
+            controller: _scrollController,
+            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 16),
+            itemCount: _messages.length,
+            itemBuilder: (context, index) {
+              final message = _messages[index];
+              final isMine = message.isFrom(_currentUserId);
+              final showTime = _shouldShowTimeSeparator(index);
 
-          return Column(
-            children: [
-              if (showTime) _buildTimeChip(message.timestamp),
-              Align(
-                alignment:
-                    isMine ? Alignment.centerRight : Alignment.centerLeft,
-                child: Padding(
-                  padding: const EdgeInsets.symmetric(vertical: 6),
-                  child: Row(
-                    mainAxisAlignment:
-                        isMine
-                            ? MainAxisAlignment.end
-                            : MainAxisAlignment.start,
-                    crossAxisAlignment: CrossAxisAlignment.end,
-                    children: [
-                      if (!isMine) ...[
-                        _buildAvatar('王'),
-                        const SizedBox(width: 8),
-                      ],
-                      Flexible(
-                        child: _ChatBubble(
-                          content: message.content,
-                          isMine: isMine,
-                        ),
-                      ),
-                      if (isMine) ...[
-                        const SizedBox(width: 8),
-                        _buildAvatar('我', isMine: true),
-                      ],
-                    ],
-                  ),
-                ),
-              ),
-              if (isMine)
-                Padding(
-                  padding: const EdgeInsets.only(top: 2, right: 48),
-                  child: Align(
-                    alignment: Alignment.centerRight,
-                    child: Text(
-                      '已送达',
-                      style: TextStyle(
-                        fontSize: 11,
-                        color: Colors.grey.shade500,
+              return Column(
+                children: [
+                  if (showTime) _buildTimeChip(message.timestamp),
+                  Align(
+                    alignment:
+                        isMine ? Alignment.centerRight : Alignment.centerLeft,
+                    child: Padding(
+                      padding: const EdgeInsets.symmetric(vertical: 6),
+                      child: Row(
+                        mainAxisAlignment:
+                            isMine
+                                ? MainAxisAlignment.end
+                                : MainAxisAlignment.start,
+                        crossAxisAlignment: CrossAxisAlignment.end,
+                        children: [
+                          if (!isMine) ...[
+                            _buildAvatar('王'),
+                            const SizedBox(width: 8),
+                          ],
+                          Flexible(
+                            child: _ChatBubble(
+                              content: message.content,
+                              isMine: isMine,
+                            ),
+                          ),
+                          if (isMine) ...[
+                            const SizedBox(width: 8),
+                            _buildAvatar('我', isMine: true),
+                          ],
+                        ],
                       ),
                     ),
                   ),
+                  if (isMine)
+                    Padding(
+                      padding: const EdgeInsets.only(top: 2, right: 48),
+                      child: Align(
+                        alignment: Alignment.centerRight,
+                        child: Text(
+                          '已送达',
+                          style: TextStyle(
+                            fontSize: 11,
+                            color: Colors.grey.shade500,
+                          ),
+                        ),
+                      ),
+                    ),
+                ],
+              );
+            },
+          ),
+          if (_isLoading)
+            const Positioned.fill(
+              child: IgnorePointer(
+                child: Center(
+                  child: CircularProgressIndicator(),
                 ),
-            ],
-          );
-        },
+              ),
+            ),
+        ],
       ),
     );
   }
@@ -399,21 +546,56 @@ class _ChatScreenState extends State<ChatScreen> {
   void _handleSendMessage() {
     final text = _inputController.text.trim();
     if (text.isEmpty) return;
+    final now = DateTime.now().millisecondsSinceEpoch;
 
-    final message = ChatMessageModel(
-      id: DateTime.now().millisecondsSinceEpoch.toString(),
-      fromUserId: _currentUserId,
-      toUserId: _doctorUserId,
-      content: text,
-      timestamp: DateTime.now().millisecondsSinceEpoch,
-    );
+    if (_roomId != null && _targetUserId != null && _crypto != null) {
+      () async {
+        final plain = text;
+        String cipher = plain;
+        try {
+          cipher = await _crypto!.encryptContent(plain);
+        } catch (_) {}
 
-    setState(() {
-      _messages.add(message);
-    });
+        final msg = ChatMessageModel(
+          type: 'CHAT',
+          toUserId: _targetUserId,
+          roomId: _roomId,
+          content: cipher,
+          timestamp: now,
+        );
+
+        await _chatService.sendMessage(
+          destination: '/app/chat.send',
+          message: msg,
+        );
+
+        if (!mounted) return;
+        setState(() {
+          _messages.add(
+            _UiMessage(
+              fromUserId: _currentUserId ?? '',
+              toUserId: _targetUserId,
+              content: plain,
+              timestamp: now,
+            ),
+          );
+        });
+        _scrollToBottom();
+      }();
+    } else {
+      final uiMsg = _UiMessage(
+        fromUserId: _currentUserId ?? 'patient_demo',
+        toUserId: _targetUserId ?? 'doctor_001',
+        content: text,
+        timestamp: now,
+      );
+      setState(() {
+        _messages.add(uiMsg);
+      });
+      _scrollToBottom();
+    }
 
     _inputController.clear();
-    _scrollToBottom();
   }
 
   void _scrollToBottom() {
@@ -425,6 +607,49 @@ class _ChatScreenState extends State<ChatScreen> {
         curve: Curves.easeOut,
       );
     });
+  }
+
+  Future<void> _handleIncomingMessage(ChatMessageModel message) async {
+    if (_roomId != null && message.roomId != null && message.roomId != _roomId) {
+      return;
+    }
+    var text = message.content;
+    if (_crypto != null) {
+      try {
+        text = await _crypto!.decryptContent(message.content);
+      } catch (_) {}
+    }
+    if (!mounted) return;
+    setState(() {
+      _messages.add(
+        _UiMessage(
+          fromUserId: message.fromUserId ?? '',
+          toUserId: message.toUserId,
+          content: text,
+          timestamp: message.timestamp,
+        ),
+      );
+    });
+    _scrollToBottom();
+  }
+}
+
+class _UiMessage {
+  _UiMessage({
+    required this.fromUserId,
+    this.toUserId,
+    required this.content,
+    this.timestamp,
+  });
+
+  final String fromUserId;
+  final String? toUserId;
+  final String content;
+  final int? timestamp;
+
+  bool isFrom(String? userId) {
+    if (userId == null) return false;
+    return fromUserId == userId;
   }
 }
 

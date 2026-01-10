@@ -2,6 +2,7 @@ import 'package:flymfrontend/services/api/api_service.dart';
 import 'package:flymfrontend/services/api/auth_service.dart';
 import 'package:flymfrontend/services/api/consultation_service.dart';
 import 'package:flymfrontend/services/api/doctor_service.dart';
+import 'package:flymfrontend/services/api/im_service.dart';
 import 'package:flymfrontend/services/api/upload_service.dart';
 import 'package:flymfrontend/services/chat/chat_service.dart';
 
@@ -65,6 +66,14 @@ class ServiceLocator {
     return _services[UploadService] as UploadService;
   }
 
+  /// 获取 IM 服务
+  ImService getImService() {
+    if (!_services.containsKey(ImService)) {
+      throw Exception('ImService not registered');
+    }
+    return _services[ImService] as ImService;
+  }
+
   /// 获取聊天服务
   ChatService getChatService() {
     if (!_services.containsKey(ChatService)) {
@@ -81,6 +90,7 @@ class ServiceLocator {
     register<ConsultationService>(ConsultationService(getApiService()));
     register<DoctorService>(DoctorService(getApiService()));
     register<UploadService>(UploadService(getApiService()));
+    register<ImService>(ImService(getApiService()));
     // 注册聊天服务（单例）
     registerSingleton<ChatService>(() => ChatService());
   }

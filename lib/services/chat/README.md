@@ -172,8 +172,8 @@ await signaling.dispose(); // 释放 STOMP 和媒体资源
 
 ```dart
 // WebSocket配置
-static const String wsBaseUrlDev = 'ws://192.168.127.1:10021';
-static const String wsBaseUrlProd = 'ws://192.168.127.1:10021';
+static const String wsBaseUrlDev = 'ws://192.168.127.1:10023';
+static const String wsBaseUrlProd = 'ws://192.168.127.1:10023';
 static const String wsStompEndpoint = '/ws'; // STOMP端点路径
 static const int wsReconnectInterval = 5000; // 重连间隔(毫秒)
 static const int wsHeartbeatInterval = 30000; // 心跳间隔(毫秒)

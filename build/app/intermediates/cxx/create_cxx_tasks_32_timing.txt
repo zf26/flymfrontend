@@ -73,3 +73,80 @@ create_cxx_tasks
   [gap of 23ms]
 create_cxx_tasks completed in 201ms
 
+# C/C++ build system timings
+create_cxx_tasks
+  create-initial-cxx-model
+    create-module-model 28ms
+    create-variant-model 13ms
+    create-ARMEABI_V7A-model 34ms
+    [gap of 72ms]
+  create-initial-cxx-model completed in 151ms
+  [gap of 23ms]
+create_cxx_tasks completed in 180ms
+
+# C/C++ build system timings
+create_cxx_tasks
+  create-initial-cxx-model
+    create-module-model 20ms
+    create-variant-model 10ms
+    create-ARMEABI_V7A-model 26ms
+    [gap of 79ms]
+  create-initial-cxx-model completed in 140ms
+  [gap of 21ms]
+create_cxx_tasks completed in 166ms
+
+# C/C++ build system timings
+create_cxx_tasks
+  create-initial-cxx-model 118ms
+create_cxx_tasks completed in 122ms
+
+# C/C++ build system timings
+create_cxx_tasks
+  create-initial-cxx-model 115ms
+create_cxx_tasks completed in 119ms
+
+# C/C++ build system timings
+create_cxx_tasks
+  create-initial-cxx-model 104ms
+create_cxx_tasks completed in 107ms
+
+# C/C++ build system timings
+create_cxx_tasks
+  create-initial-cxx-model 96ms
+create_cxx_tasks completed in 101ms
+
+# C/C++ build system timings
+create_cxx_tasks
+  create-initial-cxx-model 103ms
+create_cxx_tasks completed in 105ms
+
+# C/C++ build system timings
+create_cxx_tasks
+  create-initial-cxx-model 87ms
+create_cxx_tasks completed in 89ms
+
+# C/C++ build system timings
+create_cxx_tasks
+  create-initial-cxx-model 89ms
+create_cxx_tasks completed in 92ms
+
+# C/C++ build system timings
+create_cxx_tasks
+  create-initial-cxx-model
+    create-module-model 10ms
+    [gap of 114ms]
+  create-initial-cxx-model completed in 124ms
+create_cxx_tasks completed in 126ms
+
+# C/C++ build system timings
+create_cxx_tasks
+  create-initial-cxx-model
+    create-module-model 54ms
+    create-variant-model 13ms
+    create-ARMEABI_V7A-model 35ms
+    create-ARM64_V8A-model 10ms
+    [gap of 64ms]
+  create-initial-cxx-model completed in 181ms
+  [gap of 26ms]
+create_cxx_tasks completed in 215ms
+

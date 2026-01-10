@@ -14,7 +14,9 @@ class ApiResult<T> {
     T Function(dynamic)? fromJsonT,
   ) {
     final code = json['code'] as int? ?? 500;
-    final message = json['message'] as String? ?? '未知错误';
+    // 同时支持 message 和 msg 字段（后端可能使用不同的字段名）
+    final message =
+        json['message'] as String? ?? json['msg'] as String? ?? '未知错误';
     final dynamic dataJson = json['data'];
 
     T? data;
