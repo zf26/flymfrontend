@@ -154,7 +154,7 @@ class ProfileScreen extends StatelessWidget {
                         title: const Text('个人信息'),
                         trailing: const Icon(Icons.chevron_right),
                         onTap: () {
-                          // TODO: 跳转到个人信息页面
+                          context.push(AppConstants.routePersonalInfo);
                         },
                       ),
                       const Divider(height: 1),
@@ -166,7 +166,7 @@ class ProfileScreen extends StatelessWidget {
                         title: const Text('我的问诊'),
                         trailing: const Icon(Icons.chevron_right),
                         onTap: () {
-                          context.go(AppConstants.routeConsultation);
+                          context.push(AppConstants.routeConsultation);
                         },
                       ),
                       const Divider(height: 1),

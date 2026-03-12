@@ -10,7 +10,7 @@ class SettingsProvider with ChangeNotifier {
 
   bool _cacheEnabled = true;
   bool _autoCleanCache = true;
-  String _cacheSize = '0 B';
+  String _cacheSize = '0 MB';
   bool _isLoadingCacheSize = false;
 
   bool get cacheEnabled => _cacheEnabled;
@@ -42,11 +42,11 @@ class SettingsProvider with ChangeNotifier {
     notifyListeners();
 
     try {
-      final size = await _cacheManager.getCacheSize();
-      _cacheSize = _cacheManager.formatCacheSize(size);
+      final size = await _cacheManager.getAppCacheSummary();
+      _cacheSize = _cacheManager.formatCacheSize(size['total']);
     } catch (e) {
       LoggerUtil.e('获取缓存大小失败', e);
-      _cacheSize = '0 B';
+      _cacheSize = '0 MB';
     } finally {
       _isLoadingCacheSize = false;
       notifyListeners();

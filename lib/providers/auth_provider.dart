@@ -60,6 +60,7 @@ class AuthProvider with ChangeNotifier {
   Future<void> initUser() async {
     try {
       final userJson = StorageUtil.getString(AppConfig.keyUserInfo);
+      debugPrint('userJson: $userJson');
       if (userJson != null && userJson.isNotEmpty) {
         try {
           final userMap = jsonDecode(userJson) as Map<String, dynamic>;
@@ -106,7 +107,6 @@ class AuthProvider with ChangeNotifier {
         final userData = result.data!['user'];
         if (userData != null) {
           _user = _parseUserData(userData as Map<String, dynamic>);
-          debugPrint('userData: ${_user?.toJson()}');
           if (_user != null) {
             await StorageUtil.setString(
               AppConfig.keyUserInfo,

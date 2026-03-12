@@ -4,7 +4,9 @@ import 'package:flymfrontend/services/api/consultation_service.dart';
 import 'package:flymfrontend/services/api/doctor_service.dart';
 import 'package:flymfrontend/services/api/im_service.dart';
 import 'package:flymfrontend/services/api/upload_service.dart';
+import 'package:flymfrontend/services/api/symptom_analysis_service.dart';
 import 'package:flymfrontend/services/chat/chat_service.dart';
+import 'package:flymfrontend/providers/chat_provider.dart';
 
 /// 服务定位器（简单的依赖注入容器）
 class ServiceLocator {
@@ -82,6 +84,22 @@ class ServiceLocator {
     return _services[ChatService] as ChatService;
   }
 
+  /// 获取症状分析服务
+  SymptomAnalysisService getSymptomAnalysisService() {
+    if (!_services.containsKey(SymptomAnalysisService)) {
+      throw Exception('SymptomAnalysisService not registered');
+    }
+    return _services[SymptomAnalysisService] as SymptomAnalysisService;
+  }
+
+  /// 获取聊天Provider
+  ChatProvider getChatProvider() {
+    if (!_services.containsKey(ChatProvider)) {
+      throw Exception('ChatProvider not registered');
+    }
+    return _services[ChatProvider] as ChatProvider;
+  }
+
   /// 初始化所有服务
   void initialize() {
     // 注册API服务
@@ -91,7 +109,10 @@ class ServiceLocator {
     register<DoctorService>(DoctorService(getApiService()));
     register<UploadService>(UploadService(getApiService()));
     register<ImService>(ImService(getApiService()));
+    register<SymptomAnalysisService>(SymptomAnalysisService(getApiService()));
     // 注册聊天服务（单例）
     registerSingleton<ChatService>(() => ChatService());
+    // 注册聊天Provider
+    register<ChatProvider>(ChatProvider(getImService()));
   }
 }

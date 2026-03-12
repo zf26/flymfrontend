@@ -10,6 +10,7 @@ import 'package:flymfrontend/providers/auth_provider.dart';
 import 'package:flymfrontend/providers/consultation_provider.dart';
 import 'package:flymfrontend/providers/doctor_provider.dart';
 import 'package:flymfrontend/providers/settings_provider.dart';
+import 'package:flymfrontend/providers/chat_provider.dart';
 import 'package:flymfrontend/core/cache/cache_manager.dart';
 import 'package:flymfrontend/config/app_config.dart';
 import 'package:flymfrontend/utils/storage_util.dart';
@@ -64,7 +65,13 @@ class MyApp extends StatelessWidget {
     return MultiProvider(
       providers: [
         ChangeNotifierProvider(
-          create: (_) => AuthProvider(serviceLocator.getAuthService()),
+          // 在 provider 创建后立即初始化本地用户信息（从 Storage 中恢复）
+          create: (_) {
+            final authProvider = AuthProvider(serviceLocator.getAuthService());
+            // 异步初始化用户信息（不阻塞 UI）
+            authProvider.initUser();
+            return authProvider;
+          },
         ),
         ChangeNotifierProvider(
           create:
@@ -75,6 +82,9 @@ class MyApp extends StatelessWidget {
           create: (_) => DoctorProvider(serviceLocator.getDoctorService()),
         ),
         ChangeNotifierProvider(create: (_) => SettingsProvider()),
+        ChangeNotifierProvider(
+          create: (_) => ChatProvider(serviceLocator.getImService()),
+        ),
       ],
       child: ScreenUtilInit(
         designSize: const Size(375, 812), // 设计稿尺寸

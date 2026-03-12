@@ -7,12 +7,16 @@ class AppConstants {
   static const String routeConsultation = '/consultation';
   static const String routeConsultationDetail = '/consultation/detail';
   static const String routeCreateConsultation = '/consultation/create';
+  static const String routeSymptomInput = '/symptom-input';
+  static const String routeConsultationRecommendation =
+      '/consultation-recommendation';
   static const String routeDoctorList = '/doctor/list';
   static const String routeDoctorDetail = '/doctor/detail';
   static const String routeProfile = '/profile';
   static const String routeSettings = '/settings';
   static const String routeChatContacts = '/chat/contacts';
   static const String routeChat = '/chat';
+  static const String routePersonalInfo = '/profile/personal-info';
 
   // 问诊状态
   static const String consultationStatusPending = 'pending'; // 待接诊

@@ -1,6 +1,7 @@
 import 'dart:convert';
 import 'package:flymfrontend/utils/storage_util.dart';
 import 'package:flymfrontend/utils/logger_util.dart';
+import 'package:flymfrontend/config/app_config.dart';
 
 /// 缓存项
 class CacheItem<T> {
@@ -178,26 +179,59 @@ class CacheManager {
     }
   }
 
-  /// 获取缓存大小（估算）
-  Future<int> getCacheSize() async {
+  /// 按指定的 key 列表计算缓存大小（不带前缀），返回每个 key 的大小与总和（单位：字节）
+  ///
+  /// 传入的 keys 应是业务层使用的“裸 key”，例如 `consultations`、`doctors`，
+  /// 方法会自动将前缀 `_cachePrefix` 拼接后读取实际存储项。
+  Future<Map<String, dynamic>> getCacheSummaryForKeys(List<String> keys) async {
     try {
       await StorageUtil.init();
-      final keys = StorageUtil.getKeys();
+      final Map<String, int> sizes = {};
+      int total = 0;
 
-      int totalSize = 0;
       for (final key in keys) {
-        if (key.startsWith(_cachePrefix)) {
-          final value = StorageUtil.getString(key);
-          if (value != null) {
-            totalSize += value.length * 2; // UTF-16编码，每个字符2字节
-          }
+        // 支持两种形式的 key：
+        // 1. 直接传入的存储 key（如 'user_info'、'token'）
+        // 2. 旧版使用的带前缀 cache_ 的 key（如 'cache_consultations'）
+        String? value = StorageUtil.getString(key);
+        if (value == null) {
+          // 尝试带前缀的 key，保持向后兼容
+          final prefixedKey = '$_cachePrefix$key';
+          value = StorageUtil.getString(prefixedKey);
         }
+        final int size = value != null ? value.length * 2 : 0;
+        sizes[key] = size;
+        total += size;
+      }
+      return {'sizes': sizes, 'total': total};
+    } catch (e) {
+      LoggerUtil.e('按 keys 获取缓存汇总失败', e);
+      return {'sizes': <String, int>{}, 'total': 0};
+    }
+  }
+
+  /// 使用 AppConfig 中预定义的缓存 key 列表返回汇总信息
+  ///
+  /// 如果需要统计更多 key，可以传入 [additionalKeys] 追加统计。
+  Future<Map<String, dynamic>> getAppCacheSummary({
+    List<String>? additionalKeys,
+  }) async {
+    try {
+      // AppConfig 包含 cacheKeyConsultations / cacheKeyDoctors 等定义
+      final keys = <String>[
+        AppConfig.cacheKeyConsultations,
+        AppConfig.cacheKeyDoctors,
+        AppConfig.keyToken,
+        AppConfig.keyUserInfo,
+      ];
+      if (additionalKeys != null && additionalKeys.isNotEmpty) {
+        keys.addAll(additionalKeys);
       }
 
-      return totalSize;
+      return await getCacheSummaryForKeys(keys);
     } catch (e) {
-      LoggerUtil.e('获取缓存大小失败', e);
-      return 0;
+      LoggerUtil.e('获取 App 缓存汇总失败', e);
+      return {'sizes': <String, int>{}, 'total': 0};
     }
   }
 

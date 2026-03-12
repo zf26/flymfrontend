@@ -8,8 +8,12 @@ import 'package:flymfrontend/screens/home/home_screen.dart';
 import 'package:flymfrontend/screens/consultation/consultation_list_screen.dart';
 import 'package:flymfrontend/screens/consultation/consultation_detail_screen.dart';
 import 'package:flymfrontend/screens/consultation/create_consultation_screen.dart';
+import 'package:flymfrontend/screens/consultation/symptom_input_screen.dart';
+import 'package:flymfrontend/screens/consultation/recommendation_screen.dart';
+import 'package:flymfrontend/models/consultation_recommendation_model.dart';
 import 'package:flymfrontend/screens/doctor/doctor_list_screen.dart';
 import 'package:flymfrontend/screens/profile/profile_screen.dart';
+import 'package:flymfrontend/screens/profile/personal_info_screen.dart';
 import 'package:flymfrontend/screens/settings/settings_screen.dart';
 import 'package:flymfrontend/screens/chat/chat_screen.dart';
 import 'package:flymfrontend/screens/chat/chat_contacts_screen.dart';
@@ -60,6 +64,22 @@ class AppRouter {
           },
         ),
         GoRoute(
+          path: AppConstants.routeSymptomInput,
+          name: 'symptom_input',
+          builder: (context, state) => SymptomInputScreen(showAppBar: true),
+        ),
+        GoRoute(
+          path: AppConstants.routeConsultationRecommendation,
+          name: 'consultation_recommendation',
+          builder: (context, state) {
+            final recommendation = state.extra as ConsultationRecommendation?;
+            if (recommendation == null) {
+              return const Scaffold(body: Center(child: Text('参数错误')));
+            }
+            return RecommendationScreen(recommendation: recommendation);
+          },
+        ),
+        GoRoute(
           path: AppConstants.routeDoctorList,
           name: 'doctor_list',
           builder: (context, state) => const DoctorListScreen(),
@@ -68,6 +88,11 @@ class AppRouter {
           path: AppConstants.routeProfile,
           name: 'profile',
           builder: (context, state) => const ProfileScreen(),
+        ),
+        GoRoute(
+          path: AppConstants.routePersonalInfo,
+          name: 'personal_info',
+          builder: (context, state) => const PersonalInfoScreen(),
         ),
         GoRoute(
           path: AppConstants.routeSettings,

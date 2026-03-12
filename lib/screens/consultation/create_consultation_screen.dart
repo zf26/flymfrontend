@@ -12,8 +12,9 @@ import 'package:flymfrontend/config/app_constants.dart';
 /// 创建问诊页面
 class CreateConsultationScreen extends StatefulWidget {
   final String? doctorId;
+  final bool showAppBar;
 
-  const CreateConsultationScreen({super.key, this.doctorId});
+  const CreateConsultationScreen({super.key, this.doctorId, this.showAppBar = true});
 
   @override
   State<CreateConsultationScreen> createState() =>
@@ -30,6 +31,16 @@ class _CreateConsultationScreenState extends State<CreateConsultationScreen> {
   bool _isUploading = false;
   bool _isSubmitting = false;
   DoctorModel? _selectedDoctor;
+
+  // 新增表单字段 - 针对年轻人优化
+  String _consultationType = '初诊'; // 初诊/复诊/咨询
+  String? _selectedDepartment;
+  String _consultationMethod = '文字'; // 文字/语音/视频
+  bool _isAnonymous = false;
+  String? _priceBudget;
+  String _urgencyLevel = '普通'; // 普通/紧急/非常紧急
+  List<String> _selectedSymptoms = [];
+  bool _agreeToTerms = false;
 
   @override
   void initState() {
@@ -166,10 +177,25 @@ class _CreateConsultationScreenState extends State<CreateConsultationScreen> {
       return;
     }
 
-    if (_descriptionController.text.trim().isEmpty) {
+    if (_selectedDepartment == null) {
       ScaffoldMessenger.of(
         context,
-      ).showSnackBar(const SnackBar(content: Text('请输入问诊描述')));
+      ).showSnackBar(const SnackBar(content: Text('请选择就诊科室')));
+      return;
+    }
+
+    if (_descriptionController.text.trim().isEmpty &&
+        _selectedSymptoms.isEmpty) {
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text('请填写问诊描述或选择症状标签')));
+      return;
+    }
+
+    if (!_agreeToTerms) {
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text('请同意隐私政策和服务协议')));
       return;
     }
 
@@ -177,12 +203,41 @@ class _CreateConsultationScreenState extends State<CreateConsultationScreen> {
       _isSubmitting = true;
     });
 
+    // 组合问诊描述
+    String fullDescription = '';
+    if (_selectedSymptoms.isNotEmpty) {
+      fullDescription += '症状标签：${_selectedSymptoms.join('、')}\n\n';
+    }
+    fullDescription += _descriptionController.text.trim();
+
     final provider = context.read<ConsultationProvider>();
     final success = await provider.createConsultation(
       doctorId: _selectedDoctor!.id,
-      description: _descriptionController.text.trim(),
+      description: fullDescription,
       images: _uploadedImageUrls.isNotEmpty ? _uploadedImageUrls : null,
+      consultationType: _consultationType,
+      department: _selectedDepartment,
+      consultationMethod: _consultationMethod,
+      isAnonymous: _isAnonymous,
+      priceBudget: _priceBudget,
+      urgencyLevel: _urgencyLevel,
+      symptoms: _selectedSymptoms.isNotEmpty ? _selectedSymptoms : null,
+      agreeToTerms: _agreeToTerms,
     );
+
+    // 调试：打印新增字段信息
+    if (success) {
+      debugPrint('=== 问诊创建成功，详细信息 ===');
+      debugPrint('就诊类型: $_consultationType');
+      debugPrint('科室: $_selectedDepartment');
+      debugPrint('咨询方式: $_consultationMethod');
+      debugPrint('匿名咨询: $_isAnonymous');
+      debugPrint('价格预算: $_priceBudget');
+      debugPrint('紧急程度: $_urgencyLevel');
+      debugPrint('症状标签: $_selectedSymptoms');
+      debugPrint('同意协议: $_agreeToTerms');
+      debugPrint('========================');
+    }
 
     setState(() {
       _isSubmitting = false;
@@ -211,7 +266,7 @@ class _CreateConsultationScreenState extends State<CreateConsultationScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('创建问诊'), elevation: 0),
+      appBar: widget.showAppBar ? AppBar(title: const Text('创建问诊'), elevation: 0) : null,
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(16),
         child: Column(
@@ -266,6 +321,118 @@ class _CreateConsultationScreenState extends State<CreateConsultationScreen> {
               ),
             ),
             const SizedBox(height: 16),
+
+            // 就诊类型
+            const Text(
+              '就诊类型',
+              style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+            ),
+            const SizedBox(height: 8),
+            Row(
+              children:
+                  ['初诊', '复诊', '咨询'].map((type) {
+                    return Expanded(
+                      child: Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 4),
+                        child: ChoiceChip(
+                          label: Text(type),
+                          selected: _consultationType == type,
+                          onSelected: (selected) {
+                            if (selected) {
+                              setState(() => _consultationType = type);
+                            }
+                          },
+                          backgroundColor: Colors.grey[100],
+                          selectedColor: Theme.of(
+                            context,
+                          ).primaryColor.withOpacity(0.2),
+                          checkmarkColor: Theme.of(context).primaryColor,
+                        ),
+                      ),
+                    );
+                  }).toList(),
+            ),
+            const SizedBox(height: 16),
+
+            // 科室选择
+            const Text(
+              '就诊科室',
+              style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+            ),
+            const SizedBox(height: 8),
+            Wrap(
+              spacing: 8,
+              runSpacing: 8,
+              children:
+                  ['内科', '皮肤科', '心理咨询', '运动康复', '眼科', '口腔科', '妇科', '其他'].map((
+                    department,
+                  ) {
+                    return FilterChip(
+                      label: Text(department),
+                      selected: _selectedDepartment == department,
+                      onSelected: (selected) {
+                        setState(() {
+                          _selectedDepartment = selected ? department : null;
+                        });
+                      },
+                      backgroundColor: Colors.grey[100],
+                      selectedColor: Theme.of(
+                        context,
+                      ).primaryColor.withOpacity(0.2),
+                      checkmarkColor: Theme.of(context).primaryColor,
+                    );
+                  }).toList(),
+            ),
+            const SizedBox(height: 16),
+
+            // 常见症状标签
+            const Text(
+              '常见症状（可多选）',
+              style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+            ),
+            const SizedBox(height: 8),
+            Wrap(
+              spacing: 8,
+              runSpacing: 8,
+              children:
+                  [
+                    '头痛',
+                    '失眠',
+                    '焦虑',
+                    '皮肤问题',
+                    '胃部不适',
+                    '关节痛',
+                    '疲劳',
+                    '情绪低落',
+                    '感冒',
+                    '过敏',
+                    '便秘',
+                    '月经不调',
+                    '其他',
+                  ].map((symptom) {
+                    final isSelected = _selectedSymptoms.contains(symptom);
+                    return FilterChip(
+                      label: Text(symptom),
+                      selected: isSelected,
+                      onSelected: (selected) {
+                        setState(() {
+                          if (selected) {
+                            _selectedSymptoms.add(symptom);
+                          } else {
+                            _selectedSymptoms.remove(symptom);
+                          }
+                        });
+                      },
+                      backgroundColor: Colors.grey[100],
+                      selectedColor: Theme.of(
+                        context,
+                      ).primaryColor.withOpacity(0.2),
+                      checkmarkColor: Theme.of(context).primaryColor,
+                    );
+                  }).toList(),
+            ),
+            const SizedBox(height: 16),
+
             // 问诊描述
             const Text(
               '问诊描述',
@@ -285,6 +452,31 @@ class _CreateConsultationScreenState extends State<CreateConsultationScreen> {
               ),
             ),
             const SizedBox(height: 16),
+
+            // 匿名咨询选项
+            Card(
+              child: SwitchListTile(
+                title: const Text('匿名咨询'),
+                subtitle: const Text('医生将看不到您的真实姓名'),
+                value: _isAnonymous,
+                onChanged: (value) => setState(() => _isAnonymous = value),
+                secondary: Icon(
+                  _isAnonymous ? Icons.visibility_off : Icons.visibility,
+                  color:
+                      _isAnonymous
+                          ? Theme.of(context).primaryColor
+                          : Colors.grey,
+                ),
+              ),
+            ),
+            const SizedBox(height: 16),
+            // 紧急程度
+            const Text(
+              '紧急程度',
+              style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+            ),
+            const SizedBox(height: 8),
+
             // 上传图片
             const Text(
               '上传图片（可选）',
@@ -316,7 +508,53 @@ class _CreateConsultationScreenState extends State<CreateConsultationScreen> {
                 padding: EdgeInsets.all(16),
                 child: Center(child: CircularProgressIndicator()),
               ),
+            const SizedBox(height: 16),
+
+            // 隐私协议勾选
+            Card(
+              child: CheckboxListTile(
+                title: const Text('我已阅读并同意'),
+                subtitle: Row(
+                  children: [
+                    TextButton(
+                      onPressed: () {
+                        // TODO: 打开隐私政策页面
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          const SnackBar(content: Text('隐私政策页面开发中')),
+                        );
+                      },
+                      style: TextButton.styleFrom(
+                        padding: EdgeInsets.zero,
+                        minimumSize: const Size(0, 0),
+                        tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                      ),
+                      child: const Text('《隐私政策》'),
+                    ),
+                    const Text('和'),
+                    TextButton(
+                      onPressed: () {
+                        // TODO: 打开服务协议页面
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          const SnackBar(content: Text('服务协议页面开发中')),
+                        );
+                      },
+                      style: TextButton.styleFrom(
+                        padding: EdgeInsets.zero,
+                        minimumSize: const Size(0, 0),
+                        tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                      ),
+                      child: const Text('《服务协议》'),
+                    ),
+                  ],
+                ),
+                value: _agreeToTerms,
+                onChanged:
+                    (value) => setState(() => _agreeToTerms = value ?? false),
+                controlAffinity: ListTileControlAffinity.leading,
+              ),
+            ),
             const SizedBox(height: 32),
+
             // 提交按钮
             SizedBox(
               width: double.infinity,

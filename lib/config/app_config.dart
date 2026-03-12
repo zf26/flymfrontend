@@ -11,9 +11,9 @@ class AppConfig {
   static const int receiveTimeout = 30000; // 接收超时时间(毫秒)
 
   // WebSocket配置
-  static const String wsBaseUrlDev = 'ws://192.168.127.1:10023';
-  static const String wsBaseUrlProd = 'ws://192.168.127.1:10023';
-  static const String wsStompEndpoint = '/ws/websocket'; // STOMP端点路径
+  static const String wsBaseUrlDev = 'ws://192.168.127.1:10021';
+  static const String wsBaseUrlProd = 'ws://192.168.127.1:10021';
+  static const String wsStompEndpoint = '/ws/websocket'; // STOMP端点路径（与后端 WebSocketConfig 中的 addEndpoint 一致）
   static const int wsReconnectInterval = 5000; // 重连间隔(毫秒)
   static const int wsHeartbeatInterval = 30000; // 心跳间隔(毫秒)
 

@@ -25,6 +25,20 @@ class _ConsultationListScreenState extends State<ConsultationListScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      appBar: AppBar(
+        title: const Text('问诊记录'),
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back),
+          onPressed: () {
+            // 检查是否有可以返回的页面
+            if (GoRouter.of(context).canPop()) {
+              context.pop();
+            } else {
+              context.go(AppConstants.routeHome);
+            }
+          },
+        ),
+      ),
       body: Consumer<ConsultationProvider>(
         builder: (context, provider, child) {
           if (provider.isLoading && provider.consultations.isEmpty) {
@@ -69,7 +83,7 @@ class _ConsultationListScreenState extends State<ConsultationListScreen> {
                   const SizedBox(height: 24),
                   ElevatedButton(
                     onPressed: () {
-                      context.push(AppConstants.routeCreateConsultation);
+                      context.push(AppConstants.routeSymptomInput);
                     },
                     child: const Text('开始问诊'),
                   ),
@@ -103,12 +117,6 @@ class _ConsultationListScreenState extends State<ConsultationListScreen> {
             ),
           );
         },
-      ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: () {
-          context.push(AppConstants.routeCreateConsultation);
-        },
-        child: const Icon(Icons.add),
       ),
     );
   }

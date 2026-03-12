@@ -7,6 +7,7 @@ import 'package:provider/provider.dart';
 import 'package:flymfrontend/config/app_constants.dart';
 import 'package:flymfrontend/providers/auth_provider.dart';
 import 'package:flymfrontend/core/di/service_locator.dart';
+import 'package:flymfrontend/widgets/toast/glassmorphism_toast.dart';
 
 /// 登录页
 class LoginScreen extends StatefulWidget {
@@ -94,13 +95,7 @@ class _LoginScreenState extends State<LoginScreen>
             _isLoadingCaptcha = false;
           });
           if (mounted) {
-            ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(
-                content: Text(result.message),
-                backgroundColor: Colors.red,
-                behavior: SnackBarBehavior.floating,
-              ),
-            );
+            GlassmorphismToast.showError(context, result.message);
           }
         }
       }
@@ -109,13 +104,7 @@ class _LoginScreenState extends State<LoginScreen>
         setState(() {
           _isLoadingCaptcha = false;
         });
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('获取验证码失败: ${e.toString()}'),
-            backgroundColor: Colors.red,
-            behavior: SnackBarBehavior.floating,
-          ),
-        );
+        GlassmorphismToast.showError(context, '获取验证码失败: ${e.toString()}');
       }
     }
   }
@@ -154,13 +143,9 @@ class _LoginScreenState extends State<LoginScreen>
         if (success) {
           context.go(AppConstants.routeHome);
         } else {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text(authProvider.errorMessage ?? '短信登录失败'),
-              backgroundColor: const Color.fromARGB(255, 244, 242, 120),
-              behavior: SnackBarBehavior.floating,
-              margin: const EdgeInsets.only(top: 16, left: 16, right: 16),
-            ),
+          GlassmorphismToast.showError(
+            context,
+            authProvider.errorMessage ?? '短信登录失败',
           );
         }
       }
@@ -170,24 +155,12 @@ class _LoginScreenState extends State<LoginScreen>
     // 验证验证码输入
     final inputCode = _loginCaptchaController.text.trim();
     if (inputCode.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('请输入验证码'),
-          backgroundColor: Colors.red,
-          behavior: SnackBarBehavior.floating,
-        ),
-      );
+      GlassmorphismToast.showWarning(context, '请输入验证码');
       return;
     }
 
     if (_captchaUuid.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('验证码未加载，请刷新验证码'),
-          backgroundColor: Colors.red,
-          behavior: SnackBarBehavior.floating,
-        ),
-      );
+      GlassmorphismToast.showWarning(context, '验证码未加载，请刷新验证码');
       await _generateCaptcha();
       return;
     }
@@ -203,12 +176,9 @@ class _LoginScreenState extends State<LoginScreen>
       if (success) {
         context.go(AppConstants.routeHome);
       } else {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(authProvider.errorMessage ?? '登录失败'),
-            backgroundColor: Colors.red,
-            behavior: SnackBarBehavior.floating,
-          ),
+        GlassmorphismToast.showError(
+          context,
+          authProvider.errorMessage ?? '登录失败',
         );
         // 登录失败后刷新验证码
         await _generateCaptcha();
@@ -221,24 +191,12 @@ class _LoginScreenState extends State<LoginScreen>
   Future<void> _handleGetLoginSmsCode() async {
     final phone = _loginPhoneController.text.trim();
     if (phone.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('请输入手机号'),
-          backgroundColor: Colors.red,
-          behavior: SnackBarBehavior.floating,
-        ),
-      );
+      GlassmorphismToast.showWarning(context, '请输入手机号');
       return;
     }
 
     if (!RegExp(r'^1[3-9]\d{9}$').hasMatch(phone)) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('请输入正确的手机号'),
-          backgroundColor: Colors.red,
-          behavior: SnackBarBehavior.floating,
-        ),
-      );
+      GlassmorphismToast.showWarning(context, '请输入正确的手机号');
       return;
     }
 
@@ -251,21 +209,12 @@ class _LoginScreenState extends State<LoginScreen>
 
     if (mounted) {
       if (success) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('验证码已发送'),
-            backgroundColor: Colors.green,
-            behavior: SnackBarBehavior.floating,
-          ),
-        );
+        GlassmorphismToast.showSuccess(context, '验证码已发送');
         _startLoginSmsCountdown();
       } else {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(authProvider.errorMessage ?? '获取验证码失败'),
-            backgroundColor: Colors.red,
-            behavior: SnackBarBehavior.floating,
-          ),
+        GlassmorphismToast.showError(
+          context,
+          authProvider.errorMessage ?? '获取验证码失败',
         );
       }
     }
@@ -297,12 +246,9 @@ class _LoginScreenState extends State<LoginScreen>
       if (success) {
         context.go(AppConstants.routeHome);
       } else {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(authProvider.errorMessage ?? '微信登录失败'),
-            backgroundColor: Colors.red,
-            behavior: SnackBarBehavior.floating,
-          ),
+        GlassmorphismToast.showError(
+          context,
+          authProvider.errorMessage ?? '微信登录失败',
         );
       }
     }
@@ -316,12 +262,9 @@ class _LoginScreenState extends State<LoginScreen>
       if (success) {
         context.go(AppConstants.routeHome);
       } else {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(authProvider.errorMessage ?? '支付宝登录失败'),
-            backgroundColor: Colors.red,
-            behavior: SnackBarBehavior.floating,
-          ),
+        GlassmorphismToast.showError(
+          context,
+          authProvider.errorMessage ?? '支付宝登录失败',
         );
       }
     }
@@ -331,26 +274,14 @@ class _LoginScreenState extends State<LoginScreen>
   Future<void> _handleGetSmsCode() async {
     // 验证手机号
     if (_registerPhoneController.text.trim().isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('请输入手机号'),
-          backgroundColor: Colors.red,
-          behavior: SnackBarBehavior.floating,
-        ),
-      );
+      GlassmorphismToast.showWarning(context, '请输入手机号');
       return;
     }
 
     if (!RegExp(
       r'^1[3-9]\d{9}$',
     ).hasMatch(_registerPhoneController.text.trim())) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('请输入正确的手机号'),
-          backgroundColor: Colors.red,
-          behavior: SnackBarBehavior.floating,
-        ),
-      );
+      GlassmorphismToast.showWarning(context, '请输入正确的手机号');
       return;
     }
 
@@ -366,22 +297,13 @@ class _LoginScreenState extends State<LoginScreen>
 
     if (mounted) {
       if (success) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('验证码已发送'),
-            backgroundColor: Colors.green,
-            behavior: SnackBarBehavior.floating,
-          ),
-        );
+        GlassmorphismToast.showSuccess(context, '验证码已发送');
         // 开始倒计时
         _startSmsCountdown();
       } else {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(authProvider.errorMessage ?? '获取验证码失败'),
-            backgroundColor: Colors.red,
-            behavior: SnackBarBehavior.floating,
-          ),
+        GlassmorphismToast.showError(
+          context,
+          authProvider.errorMessage ?? '获取验证码失败',
         );
       }
     }
@@ -421,21 +343,12 @@ class _LoginScreenState extends State<LoginScreen>
 
     if (mounted) {
       if (success) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('注册成功'),
-            backgroundColor: Colors.green,
-            behavior: SnackBarBehavior.floating,
-          ),
-        );
+        GlassmorphismToast.showSuccess(context, '注册成功');
         context.go(AppConstants.routeHome);
       } else {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(authProvider.errorMessage ?? '注册失败'),
-            backgroundColor: Colors.red,
-            behavior: SnackBarBehavior.floating,
-          ),
+        GlassmorphismToast.showError(
+          context,
+          authProvider.errorMessage ?? '注册失败',
         );
       }
     }

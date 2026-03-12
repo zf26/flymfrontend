@@ -68,10 +68,9 @@ class ConsultationProvider with ChangeNotifier {
 
     try {
       final result = await _consultationService.getConsultationList(
-        page: _currentPage,
+        pageNum: _currentPage,
         pageSize: AppConfig.pageSize,
       );
-
       if (result.success && result.data != null) {
         final newConsultations = result.data!;
         _consultations.addAll(newConsultations);
@@ -119,6 +118,14 @@ class ConsultationProvider with ChangeNotifier {
     required String doctorId,
     required String description,
     List<String>? images,
+    String consultationType = '初诊',
+    String? department,
+    String consultationMethod = '文字',
+    bool isAnonymous = false,
+    String? priceBudget,
+    String urgencyLevel = '普通',
+    List<String>? symptoms,
+    bool agreeToTerms = false,
   }) async {
     _isLoading = true;
     _errorMessage = null;
@@ -129,6 +136,14 @@ class ConsultationProvider with ChangeNotifier {
         doctorId: doctorId,
         description: description,
         images: images,
+        consultationType: consultationType,
+        department: department,
+        consultationMethod: consultationMethod,
+        isAnonymous: isAnonymous,
+        priceBudget: priceBudget,
+        urgencyLevel: urgencyLevel,
+        symptoms: symptoms,
+        agreeToTerms: agreeToTerms,
       );
 
       if (result.success) {

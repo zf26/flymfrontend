@@ -10,8 +10,8 @@ ChatMessageModel _$ChatMessageModelFromJson(Map<String, dynamic> json) =>
     ChatMessageModel(
       id: json['id'] as String?,
       type: json['type'] as String? ?? 'CHAT',
-      fromUserId: json['fromUserId']?.toString(),
-      toUserId: json['toUserId']?.toString(),
+      fromUserId: json['fromUserId'] as String?,
+      toUserId: json['toUserId'] as String?,
       roomId: json['roomId'] as String?,
       content: json['content'] as String,
       timestamp: (json['timestamp'] as num?)?.toInt(),
